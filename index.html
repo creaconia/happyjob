@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HappyJob — Almacén MSA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f0f;
+      --bg2: #171717;
+      --bg3: #1f1f1f;
+      --bg4: #2a2a2a;
+      --border: rgba(255,255,255,0.08);
+      --border2: rgba(255,255,255,0.14);
+      --text: #f0f0f0;
+      --text2: #888;
+      --text3: #555;
+      --accent: #e8ff4d;
+      --accent2: #b8cc20;
+      --blue: #4da6ff;
+      --green: #4dffa0;
+      --red: #ff6b6b;
+      --orange: #ffb347;
+      --font: 'DM Sans', sans-serif;
+      --mono: 'DM Mono', monospace;
+      --radius: 10px;
+      --radius-lg: 16px;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 15px;
+    }
+
+    /* HEADER */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      border-bottom: 0.5px solid var(--border);
+      background: var(--bg);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+    .logo-text {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.3px;
+    }
+    .logo-sub {
+      font-size: 11px;
+      color: var(--text2);
+      font-family: var(--mono);
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge {
+      font-size: 11px;
+      font-family: var(--mono);
+      color: var(--accent);
+      background: rgba(232,255,77,0.1);
+      border: 0.5px solid rgba(232,255,77,0.2);
+      padding: 4px 10px;
+      border-radius: 99px;
+    }
+
+    /* LAYOUT */
+    .layout {
+      display: flex;
+      height: calc(100vh - 57px);
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 220px;
+      min-width: 220px;
+      border-right: 0.5px solid var(--border);
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      overflow-y: auto;
+    }
+    .sidebar-section {
+      font-size: 10px;
+      font-family: var(--mono);
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 12px 8px 4px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text2);
+      transition: all 0.15s;
+      border: 0.5px solid transparent;
+    }
+    .nav-item:hover { background: var(--bg3); color: var(--text); }
+    .nav-item.active {
+      background: var(--bg3);
+      color: var(--text);
+      border-color: var(--border2);
+    }
+    .nav-item.active .nav-dot { background: var(--accent); }
+    .nav-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--text3);
+      flex-shrink: 0;
+    }
+    .nav-soon {
+      font-size: 9px;
+      font-family: var(--mono);
+      color: var(--text3);
+      background: var(--bg4);
+      padding: 2px 6px;
+      border-radius: 99px;
+      margin-left: auto;
+    }
+
+    /* MAIN */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+    }
+
+    /* PAGE HEADER */
+    .page-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .page-title { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; }
+    .page-sub { font-size: 13px; color: var(--text2); margin-top: 2px; }
+
+    /* BUTTONS */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 16px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-family: var(--font);
+      cursor: pointer;
+      border: 0.5px solid var(--border2);
+      background: var(--bg3);
+      color: var(--text);
+      transition: all 0.15s;
+      font-weight: 500;
+    }
+    .btn:hover { background: var(--bg4); border-color: rgba(255,255,255,0.2); }
+    .btn.primary {
+      background: var(--accent);
+      color: #0f0f0f;
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+    .btn.primary:hover { background: var(--accent2); border-color: var(--accent2); }
+    .btn.sm { padding: 6px 12px; font-size: 12px; }
+    .btn.danger { background: rgba(255,107,107,0.1); border-color: rgba(255,107,107,0.3); color: var(--red); }
+    .btn.danger:hover { background: rgba(255,107,107,0.2); }
+
+    /* SEARCH & FILTERS */
+    .search-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .search-input {
+      flex: 1;
+      min-width: 200px;
+      padding: 10px 14px;
+      background: var(--bg2);
+      border: 0.5px solid var(--border2);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 14px;
+      font-family: var(--font);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .search-input:focus { border-color: rgba(232,255,77,0.4); }
+    .search-input::placeholder { color: var(--text3); }
+    select.search-input { cursor: pointer; }
+
+    /* STATS */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: var(--bg2);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+    }
+    .stat-label { font-size: 11px; color: var(--text2); font-family: var(--mono); margin-bottom: 6px; }
+    .stat-value { font-size: 26px; font-weight: 600; color: var(--text); letter-spacing: -1px; }
+    .stat-value.accent { color: var(--accent); }
+
+    /* RESULT COUNT */
+    .result-info {
+      font-size: 12px;
+      color: var(--text3);
+      font-family: var(--mono);
+      margin-bottom: 12px;
+    }
+
+    /* ITEM GRID */
+    .item-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 10px;
+    }
+    .item-card {
+      background: var(--bg2);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+    .item-card:hover {
+      border-color: var(--border2);
+      background: var(--bg3);
+      transform: translateY(-1px);
+    }
+    .item-card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .loc-code {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--accent);
+      background: rgba(232,255,77,0.08);
+      border: 0.5px solid rgba(232,255,77,0.15);
+      padding: 4px 10px;
+      border-radius: 99px;
+      letter-spacing: 0.5px;
+    }
+    .card-badges {
+      display: flex;
+      gap: 4px;
+    }
+    .cb {
+      font-size: 9px;
+      font-family: var(--mono);
+      padding: 3px 6px;
+      border-radius: 99px;
+    }
+    .cb.photo { background: rgba(77,255,160,0.1); color: var(--green); border: 0.5px solid rgba(77,255,160,0.2); }
+    .cb.barcode { background: rgba(77,166,255,0.1); color: var(--blue); border: 0.5px solid rgba(77,166,255,0.2); }
+    .item-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 4px;
+      line-height: 1.4;
+    }
+    .item-meta {
+      font-size: 12px;
+      color: var(--text2);
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .item-meta span { display: flex; align-items: center; gap: 3px; }
+
+    /* EMPTY STATE */
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text3);
+    }
+    .empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
+    .empty-text { font-size: 14px; }
+
+    /* MODAL */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--bg2);
+      border: 0.5px solid var(--border2);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 560px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px 0;
+      margin-bottom: 20px;
+    }
+    .modal-title { font-size: 17px; font-weight: 600; }
+    .modal-close {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--bg4);
+      border: none;
+      color: var(--text2);
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-close:hover { background: var(--bg3); color: var(--text); }
+    .modal-body { padding: 0 24px 24px; }
+
+    /* FORM */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-label { font-size: 11px; font-family: var(--mono); color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-input {
+      padding: 10px 12px;
+      background: var(--bg3);
+      border: 0.5px solid var(--border2);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 14px;
+      font-family: var(--font);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .form-input:focus { border-color: rgba(232,255,77,0.4); }
+    .form-input::placeholder { color: var(--text3); }
+    textarea.form-input { resize: vertical; min-height: 70px; }
+    select.form-input { cursor: pointer; }
+
+    /* PHOTO UPLOAD */
+    .photo-upload {
+      background: var(--bg3);
+      border: 0.5px dashed var(--border2);
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .photo-upload:hover { border-color: rgba(232,255,77,0.3); }
+    .photo-upload input { display: none; }
+    .photo-upload-text { font-size: 13px; color: var(--text2); }
+    .photo-upload-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+    .photo-preview { width: 100%; max-height: 160px; object-fit: cover; border-radius: var(--radius); display: none; }
+
+    /* BARCODE */
+    .barcode-field {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .barcode-field .form-input { flex: 1; }
+    .barcode-hint {
+      font-size: 11px;
+      color: var(--text3);
+      font-family: var(--mono);
+      margin-top: 4px;
+    }
+
+    /* DETAIL VIEW */
+    .detail-loc {
+      font-family: var(--mono);
+      font-size: 22px;
+      font-weight: 500;
+      color: var(--accent);
+      margin-bottom: 16px;
+      letter-spacing: 1px;
+    }
+    .detail-photo {
+      width: 100%;
+      max-height: 200px;
+      object-fit: cover;
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+      display: none;
+    }
+    .detail-rows { border-top: 0.5px solid var(--border); }
+    .detail-row {
+      display: flex;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 0.5px solid var(--border);
+      font-size: 13px;
+    }
+    .detail-row .dl { color: var(--text2); min-width: 110px; font-family: var(--mono); font-size: 11px; display: flex; align-items: center; }
+    .detail-row .dv { color: var(--text); font-weight: 500; flex: 1; }
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      padding-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    /* EXPORT */
+    .export-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg2);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 16px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .export-bar-text { font-size: 12px; color: var(--text2); }
+
+    /* LOADING */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--text3);
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--bg3);
+      border: 0.5px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 12px 18px;
+      font-size: 13px;
+      color: var(--text);
+      z-index: 200;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.ok { border-color: rgba(77,255,160,0.3); }
+    .toast.err { border-color: rgba(255,107,107,0.3); }
+
+    /* MOBILE */
+    @media (max-width: 640px) {
+      .sidebar { display: none; }
+      .main { padding: 16px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-group.full { grid-column: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    <div>
+      <div class="logo-text">HappyJob</div>
+      <div class="logo-sub">MSA Mantenimiento</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="badge" id="total-badge">— artículos</span>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-section">Módulos</div>
+    <div class="nav-item active" onclick="showModule('almacen')">
+      <span class="nav-dot"></span> Almacén
+    </div>
+    <div class="nav-item" onclick="showModule('revisiones')">
+      <span class="nav-dot"></span> Revisiones
+      <span class="nav-soon">pronto</span>
+    </div>
+    <div class="nav-item" onclick="showModule('tareas')">
+      <span class="nav-dot"></span> Tareas
+      <span class="nav-soon">pronto</span>
+    </div>
+    <div class="nav-item" onclick="showModule('pedidos')">
+      <span class="nav-dot"></span> Pedidos
+      <span class="nav-soon">pronto</span>
+    </div>
+    <div class="nav-item" onclick="showModule('semana')">
+      <span class="nav-dot"></span> Semana
+      <span class="nav-soon">pronto</span>
+    </div>
+  </nav>
+
+  <main class="main" id="main-content">
+
+    <!-- MÓDULO ALMACÉN -->
+    <div id="mod-almacen">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Almacén</div>
+          <div class="page-sub">Control de ubicaciones — EST · BALDA · POS · FONDO</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn" onclick="exportExcel()">↓ Exportar Excel</button>
+          <button class="btn primary" onclick="openAddModal()">+ Añadir artículo</button>
+        </div>
+      </div>
+
+      <div class="stats-row" id="stats-row">
+        <div class="stat-card"><div class="stat-label">total</div><div class="stat-value accent" id="st-total">—</div></div>
+        <div class="stat-card"><div class="stat-label">con foto</div><div class="stat-value" id="st-foto">—</div></div>
+        <div class="stat-card"><div class="stat-label">cód. barras</div><div class="stat-value" id="st-barcode">—</div></div>
+        <div class="stat-card"><div class="stat-label">estanterías</div><div class="stat-value" id="st-est">—</div></div>
+      </div>
+
+      <div class="search-row">
+        <input type="text" class="search-input" id="search-text" placeholder="Buscar descripción, referencia, ubicación..." oninput="renderList()" />
+        <select class="search-input" id="filter-est" onchange="renderList()" style="max-width:160px;">
+          <option value="">Todas las estanterías</option>
+          <option>EST01</option><option>EST02</option><option>EST03</option>
+          <option>EST04</option><option>EST05</option><option>EST06</option>
+          <option>EST07</option><option>EST08</option><option>EST09</option>
+        </select>
+        <select class="search-input" id="filter-maq" onchange="renderList()" style="max-width:160px;">
+          <option value="">Todas las máquinas</option>
+          <option>CHAMPS</option><option>KSB200</option><option>KSB200-3</option>
+          <option>KSV-2</option><option>LAZPIUR</option><option>REGG</option>
+          <option>GV3</option><option>SIMA2</option><option>SIMA3Y4</option>
+          <option>WA10</option><option>ENV</option><option>T.DECARGA</option>
+        </select>
+      </div>
+
+      <div class="result-info" id="result-info"></div>
+      <div id="item-list"><div class="loading">Cargando datos...</div></div>
+    </div>
+
+    <!-- MÓDULOS FUTUROS -->
+    <div id="mod-revisiones" style="display:none;">
+      <div class="page-header"><div><div class="page-title">Revisiones periódicas</div><div class="page-sub">Próximamente disponible</div></div></div>
+      <div class="empty"><div class="empty-icon">🔧</div><div class="empty-text">Este módulo se añadirá próximamente</div></div>
+    </div>
+    <div id="mod-tareas" style="display:none;">
+      <div class="page-header"><div><div class="page-title">Tareas</div><div class="page-sub">Próximamente disponible</div></div></div>
+      <div class="empty"><div class="empty-icon">✅</div><div class="empty-text">Este módulo se añadirá próximamente</div></div>
+    </div>
+    <div id="mod-pedidos" style="display:none;">
+      <div class="page-header"><div><div class="page-title">Pedidos</div><div class="page-sub">Próximamente disponible</div></div></div>
+      <div class="empty"><div class="empty-icon">📦</div><div class="empty-text">Este módulo se añadirá próximamente</div></div>
+    </div>
+    <div id="mod-semana" style="display:none;">
+      <div class="page-header"><div><div class="page-title">Semana</div><div class="page-sub">Próximamente disponible</div></div></div>
+      <div class="empty"><div class="empty-icon">📅</div><div class="empty-text">Este módulo se añadirá próximamente</div></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL AÑADIR / EDITAR -->
+<div class="modal-overlay" id="form-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="form-modal-title">Nuevo artículo</div>
+      <button class="modal-close" onclick="closeFormModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Estantería</label>
+          <select class="form-input" id="f-est">
+            <option value="">— Seleccionar —</option>
+            <option>EST01</option><option>EST02</option><option>EST03</option>
+            <option>EST04</option><option>EST05</option><option>EST06</option>
+            <option>EST07</option><option>EST08</option><option>EST09</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Balda</label>
+          <select class="form-input" id="f-balda">
+            <option value="">— Seleccionar —</option>
+            <option>B01</option><option>B02</option><option>B03</option><option>B04</option><option>B05</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Posición</label>
+          <select class="form-input" id="f-pos">
+            <option value="">— Seleccionar —</option>
+            <option>P01</option><option>P02</option><option>P03</option><option>P04</option>
+            <option>P05</option><option>P06</option><option>P07</option><option>P08</option><option>P09</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fondo</label>
+          <select class="form-input" id="f-fondo">
+            <option value="">— Seleccionar —</option>
+            <option>F01</option><option>F02</option><option>F03</option><option>F04</option>
+            <option>F05</option><option>F06</option><option>F07</option><option>F08</option><option>F09</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Descripción *</label>
+          <input type="text" class="form-input" id="f-desc" placeholder="Ej: Rodamiento SKF 6205-2Z" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Referencia</label>
+          <input type="text" class="form-input" id="f-ref" placeholder="Ej: SKF-6205" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">ID Máquina</label>
+          <select class="form-input" id="f-maq">
+            <option value="">— Seleccionar —</option>
+            <option>CHAMPS</option><option>KSB200</option><option>KSB200-3</option>
+            <option>KSV-2</option><option>LAZPIUR</option><option>REGG</option>
+            <option>GV3</option><option>SIMA2</option><option>SIMA3Y4</option>
+            <option>WA10</option><option>ENV</option><option>T.DECARGA</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Código de barras</label>
+          <div class="barcode-field">
+            <input type="text" class="form-input" id="f-barcode" placeholder="Escanear o escribir código..." />
+          </div>
+          <div class="barcode-hint">▦ Lector físico disponible próximamente</div>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Foto del artículo</label>
+          <label class="photo-upload" id="photo-upload-label">
+            <input type="file" accept="image/*" id="f-photo" onchange="previewPhoto(event)" />
+            <div class="photo-upload-text">Toca para añadir una foto</div>
+            <div class="photo-upload-sub">JPG, PNG — desde cámara o galería</div>
+          </label>
+          <img class="photo-preview" id="photo-preview" />
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Notas / Observaciones</label>
+          <textarea class="form-input" id="f-notas" placeholder="Información adicional..."></textarea>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" onclick="closeFormModal()">Cancelar</button>
+        <button class="btn primary" onclick="saveItem()" id="save-btn">Guardar artículo</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="detail-title">Detalle</div>
+      <button class="modal-close" onclick="closeDetailModal()">✕</button>
+    </div>
+    <div class="modal-body" id="detail-body"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://hdlwfrmxfjekwmwfjoeq.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_rysUp6hr1DlgfiuRhypPPg_YkHYEfv8';
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let items = [];
+let editId = null;
+let viewId = null;
+let photoData = null;
+
+async function loadItems() {
+  const { data, error } = await db.from('almacen').select('*').order('created_at', { ascending: false });
+  if (error) { showToast('Error al cargar datos: ' + error.message, 'err'); return; }
+  items = data || [];
+  updateStats();
+  renderList();
+}
+
+function getCode(i) {
+  return [i.estanteria, i.balda, i.posicion, i.fondo].filter(Boolean).join('-');
+}
+
+function updateStats() {
+  document.getElementById('total-badge').textContent = items.length + ' artículos';
+  document.getElementById('st-total').textContent = items.length;
+  document.getElementById('st-foto').textContent = items.filter(i => i.foto_url).length;
+  document.getElementById('st-barcode').textContent = items.filter(i => i.codigo_barras).length;
+  const ests = new Set(items.map(i => i.estanteria).filter(Boolean));
+  document.getElementById('st-est').textContent = ests.size;
+}
+
+function renderList() {
+  const q = (document.getElementById('search-text').value || '').toLowerCase();
+  const est = document.getElementById('filter-est').value;
+  const maq = document.getElementById('filter-maq').value;
+  const filtered = items.filter(i => {
+    const code = getCode(i).toLowerCase();
+    const matchQ = !q || (i.descripcion||'').toLowerCase().includes(q) || (i.referencia||'').toLowerCase().includes(q) || code.includes(q) || (i.codigo_barras||'').toLowerCase().includes(q);
+    const matchEst = !est || i.estanteria === est;
+    const matchMaq = !maq || i.id_maquina === maq;
+    return matchQ && matchEst && matchMaq;
+  });
+  document.getElementById('result-info').textContent = filtered.length + ' resultado' + (filtered.length !== 1 ? 's' : '');
+  const list = document.getElementById('item-list');
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">No se encontraron artículos</div></div>';
+    return;
+  }
+  list.innerHTML = '<div class="item-grid">' + filtered.map(i => `
+    <div class="item-card" onclick="openDetail(${i.id})">
+      <div class="item-card-top">
+        <span class="loc-code">${getCode(i) || '—'}</span>
+        <div class="card-badges">
+          ${i.foto_url ? '<span class="cb photo">foto</span>' : ''}
+          ${i.codigo_barras ? '<span class="cb barcode">cód.</span>' : ''}
+        </div>
+      </div>
+      <div class="item-name">${i.descripcion || '(sin descripción)'}</div>
+      <div class="item-meta">
+        ${i.referencia ? '<span>ref: ' + i.referencia + '</span>' : ''}
+        ${i.id_maquina ? '<span>· ' + i.id_maquina + '</span>' : ''}
+      </div>
+      ${i.notas ? '<div style="font-size:11px;color:var(--text3);margin-top:6px;font-style:italic;">' + i.notas + '</div>' : ''}
+    </div>`).join('') + '</div>';
+}
+
+function openDetail(id) {
+  viewId = id;
+  const i = items.find(x => x.id === id);
+  if (!i) return;
+  document.getElementById('detail-title').textContent = i.descripcion || '(sin descripción)';
+  document.getElementById('detail-body').innerHTML = `
+    <div class="detail-loc">${getCode(i) || '— sin ubicación —'}</div>
+    ${i.foto_url ? '<img src="' + i.foto_url + '" class="detail-photo" style="display:block;" />' : ''}
+    <div class="detail-rows">
+      <div class="detail-row"><span class="dl">Estantería</span><span class="dv">${i.estanteria||'—'}</span></div>
+      <div class="detail-row"><span class="dl">Balda</span><span class="dv">${i.balda||'—'}</span></div>
+      <div class="detail-row"><span class="dl">Posición</span><span class="dv">${i.posicion||'—'}</span></div>
+      <div class="detail-row"><span class="dl">Fondo</span><span class="dv">${i.fondo||'—'}</span></div>
+      <div class="detail-row"><span class="dl">Referencia</span><span class="dv">${i.referencia||'—'}</span></div>
+      <div class="detail-row"><span class="dl">Máquina</span><span class="dv">${i.id_maquina||'—'}</span></div>
+      <div class="detail-row"><span class="dl">Cód. barras</span><span class="dv">${i.codigo_barras||'—'}</span></div>
+      <div class="detail-row"><span class="dl">Notas</span><span class="dv">${i.notas||'—'}</span></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn danger" onclick="deleteItem()">Eliminar</button>
+      <button class="btn" onclick="startEdit()">Editar</button>
+      <button class="btn primary" onclick="closeDetailModal()">Cerrar</button>
+    </div>`;
+  document.getElementById('detail-modal').classList.add('open');
+}
+
+function closeDetailModal() {
+  document.getElementById('detail-modal').classList.remove('open');
+  viewId = null;
+}
+
+async function deleteItem() {
+  if (!confirm('¿Eliminar este artículo? Esta acción no se puede deshacer.')) return;
+  const { error } = await db.from('almacen').delete().eq('id', viewId);
+  if (error) { showToast('Error al eliminar', 'err'); return; }
+  showToast('Artículo eliminado', 'ok');
+  closeDetailModal();
+  await loadItems();
+}
+
+function startEdit() {
+  const i = items.find(x => x.id === viewId);
+  if (!i) return;
+  closeDetailModal();
+  editId = i.id;
+  document.getElementById('f-est').value = i.estanteria || '';
+  document.getElementById('f-balda').value = i.balda || '';
+  document.getElementById('f-pos').value = i.posicion || '';
+  document.getElementById('f-fondo').value = i.fondo || '';
+  document.getElementById('f-desc').value = i.descripcion || '';
+  document.getElementById('f-ref').value = i.referencia || '';
+  document.getElementById('f-maq').value = i.id_maquina || '';
+  document.getElementById('f-notas').value = i.notas || '';
+  document.getElementById('f-barcode').value = i.codigo_barras || '';
+  if (i.foto_url) {
+    document.getElementById('photo-preview').src = i.foto_url;
+    document.getElementById('photo-preview').style.display = 'block';
+    document.getElementById('photo-upload-label').style.display = 'none';
+  }
+  document.getElementById('form-modal-title').textContent = 'Editar artículo';
+  document.getElementById('form-modal').classList.add('open');
+}
+
+function openAddModal() {
+  editId = null; photoData = null;
+  ['f-est','f-balda','f-pos','f-fondo','f-desc','f-ref','f-maq','f-notas','f-barcode'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('photo-preview').style.display = 'none';
+  document.getElementById('photo-upload-label').style.display = 'block';
+  document.getElementById('form-modal-title').textContent = 'Nuevo artículo';
+  document.getElementById('form-modal').classList.add('open');
+}
+
+function closeFormModal() {
+  document.getElementById('form-modal').classList.remove('open');
+  editId = null; photoData = null;
+}
+
+async function saveItem() {
+  const est = document.getElementById('f-est').value;
+  const balda = document.getElementById('f-balda').value;
+  const pos = document.getElementById('f-pos').value;
+  const desc = document.getElementById('f-desc').value.trim();
+  if (!est || !balda || !pos || !desc) { showToast('Rellena al menos: Estantería, Balda, Posición y Descripción', 'err'); return; }
+
+  const btn = document.getElementById('save-btn');
+  btn.textContent = 'Guardando...'; btn.disabled = true;
+
+  let foto_url = editId ? (items.find(x=>x.id===editId)||{}).foto_url || '' : '';
+  if (photoData) {
+    const filename = 'foto_' + Date.now() + '.jpg';
+    const { data: upData, error: upErr } = await db.storage.from('fotos').upload(filename, photoData, { contentType: 'image/jpeg', upsert: true });
+    if (!upErr) {
+      const { data: urlData } = db.storage.from('fotos').getPublicUrl(filename);
+      foto_url = urlData.publicUrl;
+    }
+  }
+
+  const codigo_ubicacion = [est, balda, pos, document.getElementById('f-fondo').value].filter(Boolean).join('-');
+  const payload = {
+    codigo_ubicacion,
+    descripcion: desc,
+    estanteria: est,
+    balda: balda,
+    posicion: pos,
+    fondo: document.getElementById('f-fondo').value,
+    referencia: document.getElementById('f-ref').value.trim(),
+    id_maquina: document.getElementById('f-maq').value,
+    codigo_barras: document.getElementById('f-barcode').value.trim(),
+    notas: document.getElementById('f-notas').value.trim(),
+    foto_url
+  };
+
+  let error;
+  if (editId) {
+    ({ error } = await db.from('almacen').update(payload).eq('id', editId));
+  } else {
+    ({ error } = await db.from('almacen').insert(payload));
+  }
+
+  btn.textContent = 'Guardar artículo'; btn.disabled = false;
+  if (error) { showToast('Error al guardar: ' + error.message, 'err'); return; }
+  showToast(editId ? 'Artículo actualizado' : 'Artículo añadido', 'ok');
+  closeFormModal();
+  await loadItems();
+}
+
+function previewPhoto(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  photoData = file;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('photo-preview').src = ev.target.result;
+    document.getElementById('photo-preview').style.display = 'block';
+    document.getElementById('photo-upload-label').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function exportExcel() {
+  if (items.length === 0) { showToast('No hay datos para exportar', 'err'); return; }
+  const headers = ['Código Ubicación','Descripción','Estantería','Balda','Posición','Fondo','ID Máquina','Referencia','Código Barras','Notas'];
+  const rows = items.map(i => [
+    i.codigo_ubicacion||'', i.descripcion||'', i.estanteria||'', i.balda||'',
+    i.posicion||'', i.fondo||'', i.id_maquina||'', i.referencia||'',
+    i.codigo_barras||'', i.notas||''
+  ]);
+  const csv = [headers, ...rows].map(r => r.map(c => '"' + String(c).replace(/"/g,'""') + '"').join(',')).join('\n');
+  const bom = '\uFEFF';
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'happyjob_almacen_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click(); URL.revokeObjectURL(url);
+  showToast('Excel exportado correctamente', 'ok');
+}
+
+function showModule(mod) {
+  ['almacen','revisiones','tareas','pedidos','semana'].forEach(m => {
+    document.getElementById('mod-' + m).style.display = m === mod ? 'block' : 'none';
+  });
+  document.querySelectorAll('.nav-item').forEach((el, i) => {
+    el.classList.toggle('active', i === ['almacen','revisiones','tareas','pedidos','semana'].indexOf(mod));
+  });
+}
+
+let toastTimer;
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = (type === 'ok' ? '✓ ' : '✗ ') + msg;
+  t.className = 'toast show ' + (type||'');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.classList.remove('show'); }, 3000);
+}
+
+document.getElementById('form-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeFormModal(); });
+document.getElementById('detail-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeDetailModal(); });
+
+loadItems();
+</script>
+</body>
+</html>
