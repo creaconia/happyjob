@@ -295,7 +295,7 @@
 <!-- APP -->
 <div class="app" id="screen-app">
   <header class="header">
-    <div class="logo">
+    <div class="logo" onclick="showModule('dashboard')" style="cursor:pointer;" title="Volver al inicio">
       <div class="logo-icon">⚡</div>
       <div><div class="logo-text">HappyJob</div><div class="logo-sub">MSA Mantenimiento</div></div>
     </div>
@@ -376,7 +376,10 @@
 
       <div id="mod-almacen">
         <div class="page-header">
-          <div><div class="page-title">Almacén</div><div class="page-sub">Control de ubicaciones — EST · BALDA · POS · FONDO</div></div>
+          <div>
+            <div style="margin-bottom:8px;"><span onclick="showModule('dashboard')" style="font-size:12px;color:var(--text3);font-family:var(--mono);cursor:pointer;transition:color 0.15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">← Inicio</span></div>
+            <div class="page-title">Almacén</div><div class="page-sub">Control de ubicaciones — EST · BALDA · POS · FONDO</div>
+          </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <button class="btn" onclick="exportExcel()">↓ Exportar Excel</button>
             <button class="btn primary" id="btn-add-item" onclick="openAddModal()">+ Añadir artículo</button>
@@ -402,12 +405,12 @@
         <div class="result-info" id="result-info"></div>
         <div id="item-list"><div class="empty"><div class="empty-icon">📦</div><div>Cargando...</div></div></div>
       </div>
-      <div id="mod-revisiones" style="display:none;"><div class="page-header"><div><div class="page-title">Revisiones periódicas</div><div class="page-sub">Próximamente</div></div></div><div class="empty"><div class="empty-icon">🔧</div><div>Este módulo se añadirá próximamente</div></div></div>
-      <div id="mod-tareas" style="display:none;"><div class="page-header"><div><div class="page-title">Tareas</div><div class="page-sub">Próximamente</div></div></div><div class="empty"><div class="empty-icon">✅</div><div>Este módulo se añadirá próximamente</div></div></div>
-      <div id="mod-pedidos" style="display:none;"><div class="page-header"><div><div class="page-title">Pedidos</div><div class="page-sub">Próximamente</div></div></div><div class="empty"><div class="empty-icon">📦</div><div>Este módulo se añadirá próximamente</div></div></div>
-      <div id="mod-semana" style="display:none;"><div class="page-header"><div><div class="page-title">Semana</div><div class="page-sub">Próximamente</div></div></div><div class="empty"><div class="empty-icon">📅</div><div>Este módulo se añadirá próximamente</div></div></div>
+      <div id="mod-revisiones" style="display:none;"><div class="page-header"><div><div style="margin-bottom:8px;"><span onclick="showModule('dashboard')" style="font-size:12px;color:var(--text3);font-family:var(--mono);cursor:pointer;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">← Inicio</span></div><div class="page-title">Revisiones periódicas</div><div class="page-sub">Próximamente</div></div></div><div class="empty"><div class="empty-icon">🔧</div><div>Este módulo se añadirá próximamente</div></div></div>
+      <div id="mod-tareas" style="display:none;"><div class="page-header"><div><div style="margin-bottom:8px;"><span onclick="showModule('dashboard')" style="font-size:12px;color:var(--text3);font-family:var(--mono);cursor:pointer;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">← Inicio</span></div><div class="page-title">Tareas</div><div class="page-sub">Próximamente</div></div></div><div class="empty"><div class="empty-icon">✅</div><div>Este módulo se añadirá próximamente</div></div></div>
+      <div id="mod-pedidos" style="display:none;"><div class="page-header"><div><div style="margin-bottom:8px;"><span onclick="showModule('dashboard')" style="font-size:12px;color:var(--text3);font-family:var(--mono);cursor:pointer;" onmouseover="this.style.color='var(--accent)'" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">← Inicio</span></div><div class="page-title">Pedidos</div><div class="page-sub">Próximamente</div></div></div><div class="empty"><div class="empty-icon">📦</div><div>Este módulo se añadirá próximamente</div></div></div>
+      <div id="mod-semana" style="display:none;"><div class="page-header"><div><div style="margin-bottom:8px;"><span onclick="showModule('dashboard')" style="font-size:12px;color:var(--text3);font-family:var(--mono);cursor:pointer;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">← Inicio</span></div><div class="page-title">Semana</div><div class="page-sub">Próximamente</div></div></div><div class="empty"><div class="empty-icon">📅</div><div>Este módulo se añadirá próximamente</div></div></div>
       <div id="mod-usuarios" style="display:none;">
-        <div class="page-header"><div><div class="page-title">Gestión de usuarios</div><div class="page-sub">Activa cuentas y gestiona permisos por módulo</div></div></div>
+        <div class="page-header"><div><div style="margin-bottom:8px;"><span onclick="showModule('dashboard')" style="font-size:12px;color:var(--text3);font-family:var(--mono);cursor:pointer;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">← Inicio</span></div><div class="page-title">Gestión de usuarios</div><div class="page-sub">Activa cuentas y gestiona permisos por módulo</div></div></div>
         <div id="users-list"><div class="empty"><div class="empty-icon">👥</div><div>Cargando usuarios...</div></div></div>
       </div>
     </main>
