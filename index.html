@@ -307,6 +307,7 @@
   <div class="layout">
     <nav class="sidebar">
       <div class="sidebar-section">Módulos</div>
+      <div class="nav-item" id="nav-dashboard" onclick="showModule('dashboard')"><span class="nav-dot"></span> Inicio</div>
       <div class="nav-item active" id="nav-almacen" onclick="showModule('almacen')"><span class="nav-dot"></span> Almacén</div>
       <div class="nav-item" id="nav-revisiones" onclick="showModule('revisiones')"><span class="nav-dot"></span> Revisiones <span class="nav-soon">pronto</span></div>
       <div class="nav-item" id="nav-tareas" onclick="showModule('tareas')"><span class="nav-dot"></span> Tareas <span class="nav-soon">pronto</span></div>
@@ -315,6 +316,64 @@
       <div class="nav-item" id="nav-usuarios" onclick="showModule('usuarios')" style="display:none;color:var(--accent)"><span class="nav-dot" style="background:var(--accent)"></span> Usuarios</div>
     </nav>
     <main class="main">
+      <!-- DASHBOARD -->
+      <div id="mod-dashboard" style="display:none;">
+        <div style="margin-bottom:28px;">
+          <div id="dash-saludo" style="font-size:26px;font-weight:600;letter-spacing:-0.5px;margin-bottom:4px;"></div>
+          <div id="dash-fecha" style="font-size:13px;color:var(--text2);font-family:var(--mono);"></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:32px;">
+
+          <!-- Almacén -->
+          <div onclick="showModule('almacen')" style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:24px;cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden;" onmouseover="this.style.borderColor='rgba(232,255,77,0.3)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)';this.style.transform='translateY(0)'">
+            <div style="font-size:32px;margin-bottom:12px;">🗄️</div>
+            <div style="font-size:16px;font-weight:600;margin-bottom:4px;">Almacén</div>
+            <div style="font-size:12px;color:var(--text2);margin-bottom:16px;">Control de ubicaciones</div>
+            <div style="font-size:28px;font-weight:600;color:var(--accent);font-family:var(--mono);" id="dash-almacen-count">—</div>
+            <div style="font-size:11px;color:var(--text3);font-family:var(--mono);">artículos registrados</div>
+            <div style="position:absolute;bottom:16px;right:16px;font-size:11px;color:var(--accent);font-family:var(--mono);">entrar →</div>
+          </div>
+
+          <!-- Revisiones -->
+          <div onclick="showModule('revisiones')" style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:24px;cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden;" onmouseover="this.style.borderColor='rgba(255,255,255,0.2)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)';this.style.transform='translateY(0)'">
+            <div style="font-size:32px;margin-bottom:12px;">🔧</div>
+            <div style="font-size:16px;font-weight:600;margin-bottom:4px;">Revisiones</div>
+            <div style="font-size:12px;color:var(--text2);margin-bottom:16px;">Mantenimiento periódico</div>
+            <div style="font-size:13px;color:var(--text3);font-family:var(--mono);background:var(--bg3);padding:6px 10px;border-radius:var(--radius);display:inline-block;">Próximamente</div>
+            <div style="position:absolute;bottom:16px;right:16px;font-size:11px;color:var(--text3);font-family:var(--mono);">pronto →</div>
+          </div>
+
+          <!-- Tareas -->
+          <div onclick="showModule('tareas')" style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:24px;cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden;" onmouseover="this.style.borderColor='rgba(255,255,255,0.2)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)';this.style.transform='translateY(0)'">
+            <div style="font-size:32px;margin-bottom:12px;">✅</div>
+            <div style="font-size:16px;font-weight:600;margin-bottom:4px;">Tareas</div>
+            <div style="font-size:12px;color:var(--text2);margin-bottom:16px;">Seguimiento de tareas</div>
+            <div style="font-size:13px;color:var(--text3);font-family:var(--mono);background:var(--bg3);padding:6px 10px;border-radius:var(--radius);display:inline-block;">Próximamente</div>
+            <div style="position:absolute;bottom:16px;right:16px;font-size:11px;color:var(--text3);font-family:var(--mono);">pronto →</div>
+          </div>
+
+          <!-- Pedidos -->
+          <div onclick="showModule('pedidos')" style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:24px;cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden;" onmouseover="this.style.borderColor='rgba(255,255,255,0.2)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)';this.style.transform='translateY(0)'">
+            <div style="font-size:32px;margin-bottom:12px;">📦</div>
+            <div style="font-size:16px;font-weight:600;margin-bottom:4px;">Pedidos</div>
+            <div style="font-size:12px;color:var(--text2);margin-bottom:16px;">Control de pedidos</div>
+            <div style="font-size:13px;color:var(--text3);font-family:var(--mono);background:var(--bg3);padding:6px 10px;border-radius:var(--radius);display:inline-block;">Próximamente</div>
+            <div style="position:absolute;bottom:16px;right:16px;font-size:11px;color:var(--text3);font-family:var(--mono);">pronto →</div>
+          </div>
+
+          <!-- Semana -->
+          <div onclick="showModule('semana')" style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:24px;cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden;" onmouseover="this.style.borderColor='rgba(255,255,255,0.2)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)';this.style.transform='translateY(0)'">
+            <div style="font-size:32px;margin-bottom:12px;">📅</div>
+            <div style="font-size:16px;font-weight:600;margin-bottom:4px;">Semana</div>
+            <div style="font-size:12px;color:var(--text2);margin-bottom:16px;">Planificación semanal</div>
+            <div style="font-size:13px;color:var(--text3);font-family:var(--mono);background:var(--bg3);padding:6px 10px;border-radius:var(--radius);display:inline-block;">Próximamente</div>
+            <div style="position:absolute;bottom:16px;right:16px;font-size:11px;color:var(--text3);font-family:var(--mono);">pronto →</div>
+          </div>
+
+        </div>
+      </div>
+
       <div id="mod-almacen">
         <div class="page-header">
           <div><div class="page-title">Almacén</div><div class="page-sub">Control de ubicaciones — EST · BALDA · POS · FONDO</div></div>
@@ -701,7 +760,19 @@ function enterApp() {
   document.getElementById('btn-add-item').style.display = isAdmin ? 'inline-flex' : 'none';
   document.getElementById('nav-usuarios').style.display = isAdmin ? 'flex' : 'none';
   showScreen('app');
+  showModule('dashboard');
   loadItems();
+}
+
+function updateDashboard() {
+  const nombre = userProfile.nombre || 'Administrador';
+  const hora = new Date().getHours();
+  const saludo = hora < 12 ? 'Buenos días' : hora < 20 ? 'Buenas tardes' : 'Buenas noches';
+  document.getElementById('dash-saludo').textContent = saludo + ', ' + nombre + ' 👋';
+  const ahora = new Date();
+  const opciones = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
+  document.getElementById('dash-fecha').textContent = ahora.toLocaleDateString('es-ES', opciones);
+  document.getElementById('dash-almacen-count').textContent = items.length || '—';
 }
 
 async function doLogout() {
@@ -715,6 +786,8 @@ async function loadItems() {
   const { data, error } = await db.from('almacen').select('*').order('created_at', { ascending: false });
   if (error) { showToast('Error al cargar datos', 'err'); return; }
   items = data || []; updateStats(); renderList();
+  const dashCount = document.getElementById('dash-almacen-count');
+  if (dashCount) dashCount.textContent = items.length;
 }
 
 function getCode(i) { return [i.estanteria,i.balda,i.posicion,i.fondo].filter(Boolean).join('-'); }
@@ -866,11 +939,12 @@ function exportExcel() {
 
 // ═══════════════════ MÓDULOS ═══════════════════
 function showModule(mod) {
-  ['almacen','revisiones','tareas','pedidos','semana','usuarios'].forEach(m => {
+  ['dashboard','almacen','revisiones','tareas','pedidos','semana','usuarios'].forEach(m => {
     const el = document.getElementById('mod-'+m); if(el) el.style.display = m===mod?'block':'none';
     const nav = document.getElementById('nav-'+m); if(nav) nav.classList.toggle('active', m===mod);
   });
   if (mod==='usuarios') loadUsers();
+  if (mod==='dashboard') updateDashboard();
 }
 
 // ═══════════════════ USUARIOS ═══════════════════
