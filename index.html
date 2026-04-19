@@ -403,11 +403,11 @@
 // ═══════════════════ CONFIG ═══════════════════
 const SUPABASE_URL  = 'https://hdlwfrmxfjekwmwfjoeq.supabase.co';
 const SUPABASE_KEY  = 'sb_publishable_rysUp6hr1DlgfiuRhypPPg_YkHYEfv8';
-const ADMIN_EMAIL   = 'creaconia@tutamail.com'; // 
+const ADMIN_EMAIL   = 'TU_EMAIL_AQUI'; // ← CAMBIAR POR TU EMAIL
 const EMAILJS_KEY   = 'Di32fXRj6twu9_LrF';
 const EMAILJS_SVC   = 'service_l59mrz5';
 const EMAILJS_TPL   = 'template_rmpg8tb';
-const ALERT_EMAIL   = 'lgraul42@gmail.com'; // 
+const ALERT_EMAIL   = 'TU_GMAIL_HAPPYJOB_AQUI'; // ← Gmail que creaste para alertas
 
 // Bloqueo: intentos máximos y duraciones en minutos
 const MAX_INTENTOS  = 20;
@@ -543,6 +543,10 @@ async function doLogin() {
   btn.disabled = false; btn.textContent = 'Entrar';
 
   if (error) {
+    // Borrar campos tras intento fallido
+    document.getElementById('login-email').value = '';
+    document.getElementById('login-pass').value = '';
+    document.getElementById('login-email').focus();
     const bloqueado = registrarIntentoFallido();
     if (!bloqueado) {
       const d = getSecData();
@@ -551,7 +555,7 @@ async function doLogin() {
         warn.textContent = '⚠️ Email o contraseña incorrectos. Te quedan ' + restantes + ' intentos antes del bloqueo.';
         warn.style.display = 'block';
       } else {
-        err.textContent = 'Email o contraseña incorrectos.';
+        err.textContent = 'Email o contraseña incorrectos. Por favor vuelve a introducir tus datos.';
         err.style.display = 'block';
       }
     }
