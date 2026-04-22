@@ -311,7 +311,7 @@
       <div class="nav-item active" id="nav-almacen" onclick="showModule('almacen')"><span class="nav-dot"></span> Almacén</div>
       <div class="nav-item" id="nav-revisiones" onclick="showModule('revisiones')"><span class="nav-dot"></span> Revisiones <span class="nav-soon">pronto</span></div>
       <div class="nav-item" id="nav-tareas" onclick="showModule('tareas')"><span class="nav-dot"></span> Tareas</div>
-      <div class="nav-item" id="nav-pedidos" onclick="showModule('pedidos')"><span class="nav-dot"></span> Pedidos <span class="nav-soon">pronto</span></div>
+      <div class="nav-item" id="nav-pedidos" onclick="showModule('pedidos')"><span class="nav-dot"></span> Pedidos</div>
       <div class="nav-item" id="nav-semana" onclick="showModule('semana')"><span class="nav-dot"></span> Semana <span class="nav-soon">pronto</span></div>
       <div class="nav-item" id="nav-usuarios" onclick="showModule('usuarios')" style="display:none;color:var(--accent)"><span class="nav-dot" style="background:var(--accent)"></span> Usuarios</div>
     </nav>
@@ -355,12 +355,13 @@
           </div>
 
           <!-- Pedidos -->
-          <div onclick="showModule('pedidos')" style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:24px;cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden;" onmouseover="this.style.borderColor='rgba(255,255,255,0.2)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)';this.style.transform='translateY(0)'">
+          <div onclick="showModule('pedidos')" style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:24px;cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden;" onmouseover="this.style.borderColor='rgba(255,179,71,0.3)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)';this.style.transform='translateY(0)'">
             <div style="font-size:32px;margin-bottom:12px;">📦</div>
             <div style="font-size:16px;font-weight:600;margin-bottom:4px;">Pedidos</div>
             <div style="font-size:12px;color:var(--text2);margin-bottom:16px;">Control de pedidos</div>
-            <div style="font-size:13px;color:var(--text3);font-family:var(--mono);background:var(--bg3);padding:6px 10px;border-radius:var(--radius);display:inline-block;">Próximamente</div>
-            <div style="position:absolute;bottom:16px;right:16px;font-size:11px;color:var(--text3);font-family:var(--mono);">pronto →</div>
+            <div style="font-size:28px;font-weight:600;color:var(--orange);font-family:var(--mono);" id="dash-pedidos-count">—</div>
+            <div style="font-size:11px;color:var(--text3);font-family:var(--mono);">pedidos pendientes</div>
+            <div style="position:absolute;bottom:16px;right:16px;font-size:11px;color:var(--orange);font-family:var(--mono);">entrar →</div>
           </div>
 
           <!-- Semana -->
@@ -453,7 +454,42 @@
         <div class="result-info" id="t-result-info"></div>
         <div id="tareas-list"><div class="empty"><div class="empty-icon">✅</div><div>Cargando tareas...</div></div></div>
       </div>
-      <div id="mod-pedidos" style="display:none;"><div class="page-header"><div><div style="margin-bottom:8px;"><span onclick="showModule('dashboard')" style="font-size:12px;color:var(--text3);font-family:var(--mono);cursor:pointer;" onmouseover="this.style.color='var(--accent)'" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">← Inicio</span></div><div class="page-title">Pedidos</div><div class="page-sub">Próximamente</div></div></div><div class="empty"><div class="empty-icon">📦</div><div>Este módulo se añadirá próximamente</div></div></div>
+      <div id="mod-pedidos" style="display:none;">
+        <div class="page-header">
+          <div>
+            <div style="margin-bottom:8px;"><span onclick="showModule('dashboard')" style="font-size:12px;color:var(--text3);font-family:var(--mono);cursor:pointer;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">← Inicio</span></div>
+            <div class="page-title">Pedidos</div>
+            <div class="page-sub">Control de pedidos y solicitudes</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn" onclick="exportPedidos()">↓ Exportar Excel</button>
+            <button class="btn primary" id="btn-add-pedido" onclick="openPedidoModal()">+ Nuevo pedido</button>
+          </div>
+        </div>
+        <!-- Stats pedidos -->
+        <div class="stats-row">
+          <div class="stat-card"><div class="stat-label">total</div><div class="stat-value accent" id="pt-total">—</div></div>
+          <div class="stat-card"><div class="stat-label">pendientes</div><div class="stat-value" id="pt-pend" style="color:var(--orange)">—</div></div>
+          <div class="stat-card"><div class="stat-label">enviar email</div><div class="stat-value" id="pt-email" style="color:var(--blue)">—</div></div>
+          <div class="stat-card"><div class="stat-label">recibidos</div><div class="stat-value" id="pt-recib" style="color:var(--green)">—</div></div>
+        </div>
+        <!-- Filtros pedidos -->
+        <div class="search-row">
+          <input type="text" class="search-input" id="p-search" placeholder="Buscar pedido, referencia..." oninput="renderPedidos()" />
+          <select class="search-input" id="p-filter-estado" onchange="renderPedidos()" style="max-width:180px;">
+            <option value="">Todos los estados</option>
+            <option>Pendiente</option>
+            <option>Enviar email</option>
+            <option>Recibido</option>
+          </select>
+          <select class="search-input" id="p-filter-maq" onchange="renderPedidos()" style="max-width:160px;">
+            <option value="">Todas las máquinas</option>
+            <option>CHAMPS</option><option>KSB200</option><option>KSB200-3</option><option>KSV-2</option><option>LAZPIUR</option><option>REGG</option><option>GV3</option><option>SIMA2</option><option>SIMA3Y4</option><option>WA10</option><option>ENV</option><option>T.DECARGA</option>
+          </select>
+        </div>
+        <div class="result-info" id="p-result-info"></div>
+        <div id="pedidos-list"><div class="empty"><div class="empty-icon">📦</div><div>Cargando pedidos...</div></div></div>
+      </div>
       <div id="mod-semana" style="display:none;"><div class="page-header"><div><div style="margin-bottom:8px;"><span onclick="showModule('dashboard')" style="font-size:12px;color:var(--text3);font-family:var(--mono);cursor:pointer;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">← Inicio</span></div><div class="page-title">Semana</div><div class="page-sub">Próximamente</div></div></div><div class="empty"><div class="empty-icon">📅</div><div>Este módulo se añadirá próximamente</div></div></div>
       <div id="mod-usuarios" style="display:none;">
         <div class="page-header"><div><div style="margin-bottom:8px;"><span onclick="showModule('dashboard')" style="font-size:12px;color:var(--text3);font-family:var(--mono);cursor:pointer;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">← Inicio</span></div><div class="page-title">Gestión de usuarios</div><div class="page-sub">Activa cuentas y gestiona permisos por módulo</div></div></div>
@@ -564,6 +600,43 @@
   </div>
 </div>
 
+<!-- MODAL NUEVA/EDITAR PEDIDO -->
+<div class="modal-overlay" id="pedido-form-modal">
+  <div class="modal" style="max-width:620px;">
+    <div class="modal-header"><div class="modal-title" id="pedido-form-title">Nuevo pedido</div><button class="modal-close" onclick="closePedidoModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full"><label class="form-label">Descripción del artículo *</label><input type="text" class="form-input" id="pf-desc" placeholder="Ej: Rodamiento SKF 6205-2Z" /></div>
+        <div class="form-group"><label class="form-label">Referencia</label><input type="text" class="form-input" id="pf-ref" placeholder="Ej: SKF-6205" /></div>
+        <div class="form-group"><label class="form-label">Máquina</label>
+          <select class="form-input" id="pf-maq">
+            <option value="">— Seleccionar —</option>
+            <option>CHAMPS</option><option>KSB200</option><option>KSB200-3</option><option>KSV-2</option><option>LAZPIUR</option><option>REGG</option><option>GV3</option><option>SIMA2</option><option>SIMA3Y4</option><option>WA10</option><option>ENV</option><option>T.DECARGA</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Estado</label>
+          <select class="form-input" id="pf-estado">
+            <option>Pendiente</option>
+            <option>Enviar email</option>
+            <option>Recibido</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Fecha del pedido</label><input type="date" class="form-input" id="pf-fecha" /></div>
+        <div class="form-group full"><label class="form-label">Notas</label><textarea class="form-input" id="pf-notas" placeholder="Proveedor, cantidad, información adicional..." style="min-height:70px;"></textarea></div>
+      </div>
+      <div class="modal-actions"><button class="btn" onclick="closePedidoModal()">Cancelar</button><button class="btn primary" onclick="savePedido()" id="pedido-save-btn">Guardar pedido</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE PEDIDO -->
+<div class="modal-overlay" id="pedido-detail-modal">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-header"><div class="modal-title" id="pd-title">Pedido</div><button class="modal-close" onclick="closePedidoDetail()">✕</button></div>
+    <div class="modal-body" id="pd-body"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -593,6 +666,7 @@ let editId = null, viewId = null, photoData = null;
 let pinBuffer = '', pinMode = '', pinFirst = '';
 let editPermsId = null;
 let blockTimer = null;
+let pedidos = [], editPedidoId = null, viewPedidoId = null;
 
 // ═══════════════════ SEGURIDAD — BLOQUEO ═══════════════════
 function getSecData() {
@@ -872,6 +946,7 @@ function enterApp() {
   showScreen('app');
   showModule('dashboard');
   loadItems();
+  loadPedidos();
 }
 
 function updateDashboard() {
@@ -883,6 +958,9 @@ function updateDashboard() {
   const opciones = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
   document.getElementById('dash-fecha').textContent = ahora.toLocaleDateString('es-ES', opciones);
   document.getElementById('dash-almacen-count').textContent = items.length || '—';
+  const pendCount = pedidos.filter(p => p.estado === 'Pendiente' || p.estado === 'Enviar email').length;
+  const dashPed = document.getElementById('dash-pedidos-count');
+  if (dashPed) dashPed.textContent = pendCount || '—';
 }
 
 async function doLogout() {
@@ -1056,6 +1134,7 @@ function showModule(mod) {
   if (mod==='usuarios') loadUsers();
   if (mod==='dashboard') updateDashboard();
   if (mod==='tareas') loadTareas();
+  if (mod==='pedidos') loadPedidos();
 }
 
 // ═══════════════════ USUARIOS ═══════════════════
@@ -1334,6 +1413,159 @@ function exportTareas() {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
   a.download = 'happyjob_tareas_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
+  showToast('Excel exportado', 'ok');
+}
+
+// ═══════════════════ PEDIDOS ═══════════════════
+const PEDIDO_ESTADO_COLORS = {
+  'Pendiente':    { bg:'rgba(255,179,71,0.12)',  border:'rgba(255,179,71,0.3)',  text:'var(--orange)' },
+  'Enviar email': { bg:'rgba(77,166,255,0.12)',  border:'rgba(77,166,255,0.3)',  text:'var(--blue)'   },
+  'Recibido':     { bg:'rgba(77,255,160,0.12)',  border:'rgba(77,255,160,0.3)',  text:'var(--green)'  },
+};
+
+async function loadPedidos() {
+  const { data, error } = await db.from('pedidos').select('*').order('created_at', { ascending: false });
+  if (error) { showToast('Error al cargar pedidos', 'err'); return; }
+  pedidos = data || [];
+  updatePedidosStats();
+  renderPedidos();
+  updateDashboard();
+}
+
+function updatePedidosStats() {
+  document.getElementById('pt-total').textContent = pedidos.length;
+  document.getElementById('pt-pend').textContent = pedidos.filter(p=>p.estado==='Pendiente').length;
+  document.getElementById('pt-email').textContent = pedidos.filter(p=>p.estado==='Enviar email').length;
+  document.getElementById('pt-recib').textContent = pedidos.filter(p=>p.estado==='Recibido').length;
+}
+
+function renderPedidos() {
+  const q    = (document.getElementById('p-search').value||'').toLowerCase();
+  const est  = document.getElementById('p-filter-estado').value;
+  const maq  = document.getElementById('p-filter-maq').value;
+  const f    = pedidos.filter(p => {
+    const mQ = !q||(p.descripcion||'').toLowerCase().includes(q)||(p.referencia||'').toLowerCase().includes(q);
+    return mQ && (!est||p.estado===est) && (!maq||p.maquina===maq);
+  });
+  document.getElementById('p-result-info').textContent = f.length + ' resultado' + (f.length!==1?'s':'');
+  const list = document.getElementById('pedidos-list');
+  if (!f.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">📦</div><div>No hay pedidos que coincidan</div></div>'; return; }
+  const isAdmin = currentUser.email === ADMIN_EMAIL;
+  list.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;">'+f.map(p => {
+    const c = PEDIDO_ESTADO_COLORS[p.estado] || PEDIDO_ESTADO_COLORS['Pendiente'];
+    const fecha = p.fecha_pedido ? new Date(p.fecha_pedido).toLocaleDateString('es-ES') : '—';
+    return `<div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px;cursor:pointer;transition:all 0.15s;" onclick="openPedidoDetail(${p.id})" onmouseover="this.style.borderColor='var(--border2)';this.style.background='var(--bg3)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)';this.style.background='var(--bg2)'">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;font-weight:500;margin-bottom:4px;line-height:1.4;">${p.descripcion||'(sin descripción)'}</div>
+          <div style="font-size:12px;color:var(--text2);">${p.referencia?'Ref: '+p.referencia+' · ':''} ${p.maquina?p.maquina+' · ':''} ${fecha}</div>
+          ${p.notas?'<div style="font-size:11px;color:var(--text3);margin-top:4px;font-style:italic;">'+p.notas+'</div>':''}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+          <span style="font-size:12px;font-family:var(--mono);color:${c.text};background:${c.bg};border:0.5px solid ${c.border};padding:4px 12px;border-radius:99px;white-space:nowrap;">${p.estado}</span>
+          ${isAdmin?`<button class="btn sm" style="color:var(--green);border-color:rgba(77,255,160,0.3);" onclick="event.stopPropagation();cambiarEstadoPedido(${p.id},'Recibido')" ${p.estado==='Recibido'?'disabled':''}>✓ Recibido</button>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('')+'</div>';
+}
+
+async function cambiarEstadoPedido(id, nuevoEstado) {
+  const { error } = await db.from('pedidos').update({ estado: nuevoEstado }).eq('id', id);
+  if (error) { showToast('Error', 'err'); return; }
+  showToast('Estado actualizado ✓', 'ok');
+  await loadPedidos();
+}
+
+function openPedidoModal(id) {
+  editPedidoId = id || null;
+  if (id) {
+    const p = pedidos.find(x=>x.id===id); if (!p) return;
+    document.getElementById('pf-desc').value = p.descripcion||'';
+    document.getElementById('pf-ref').value = p.referencia||'';
+    document.getElementById('pf-maq').value = p.maquina||'';
+    document.getElementById('pf-estado').value = p.estado||'Pendiente';
+    document.getElementById('pf-fecha').value = p.fecha_pedido||'';
+    document.getElementById('pf-notas').value = p.notas||'';
+    document.getElementById('pedido-form-title').textContent = 'Editar pedido';
+  } else {
+    ['pf-desc','pf-ref','pf-notas'].forEach(x=>document.getElementById(x).value='');
+    document.getElementById('pf-maq').value = '';
+    document.getElementById('pf-estado').value = 'Pendiente';
+    document.getElementById('pf-fecha').value = new Date().toISOString().slice(0,10);
+    document.getElementById('pedido-form-title').textContent = 'Nuevo pedido';
+  }
+  document.getElementById('pedido-form-modal').classList.add('open');
+}
+
+function closePedidoModal() { document.getElementById('pedido-form-modal').classList.remove('open'); editPedidoId=null; }
+
+async function savePedido() {
+  const desc = document.getElementById('pf-desc').value.trim();
+  if (!desc) { showToast('La descripción es obligatoria', 'err'); return; }
+  const btn = document.getElementById('pedido-save-btn');
+  btn.disabled=true; btn.textContent='Guardando...';
+  const payload = {
+    descripcion: desc,
+    referencia: document.getElementById('pf-ref').value.trim(),
+    maquina: document.getElementById('pf-maq').value,
+    estado: document.getElementById('pf-estado').value,
+    fecha_pedido: document.getElementById('pf-fecha').value || null,
+    notas: document.getElementById('pf-notas').value.trim()
+  };
+  let error;
+  if (editPedidoId) ({ error } = await db.from('pedidos').update(payload).eq('id', editPedidoId));
+  else ({ error } = await db.from('pedidos').insert(payload));
+  btn.disabled=false; btn.textContent='Guardar pedido';
+  if (error) { showToast('Error: '+error.message, 'err'); return; }
+  showToast(editPedidoId?'Pedido actualizado':'Pedido añadido ✓', 'ok');
+  closePedidoModal(); await loadPedidos();
+}
+
+function openPedidoDetail(id) {
+  viewPedidoId = id;
+  const p = pedidos.find(x=>x.id===id); if (!p) return;
+  const c = PEDIDO_ESTADO_COLORS[p.estado] || PEDIDO_ESTADO_COLORS['Pendiente'];
+  const isAdmin = currentUser.email === ADMIN_EMAIL;
+  const fecha = p.fecha_pedido ? new Date(p.fecha_pedido).toLocaleDateString('es-ES') : '—';
+  document.getElementById('pd-title').textContent = p.descripcion||'Pedido';
+  document.getElementById('pd-body').innerHTML = `
+    <div style="margin-bottom:16px;">
+      <span style="font-size:12px;font-family:var(--mono);color:${c.text};background:${c.bg};border:0.5px solid ${c.border};padding:5px 12px;border-radius:99px;">${p.estado}</span>
+    </div>
+    <div class="detail-rows">
+      <div class="detail-row"><span class="dl">Descripción</span><span class="dv">${p.descripcion||'—'}</span></div>
+      <div class="detail-row"><span class="dl">Referencia</span><span class="dv">${p.referencia||'—'}</span></div>
+      <div class="detail-row"><span class="dl">Máquina</span><span class="dv">${p.maquina||'—'}</span></div>
+      <div class="detail-row"><span class="dl">Fecha pedido</span><span class="dv">${fecha}</span></div>
+      <div class="detail-row"><span class="dl">Notas</span><span class="dv">${p.notas||'—'}</span></div>
+    </div>
+    <div class="modal-actions">
+      ${isAdmin?`<button class="btn danger" onclick="deletePedido()">Eliminar</button>`:''}
+      ${isAdmin?`<button class="btn" onclick="closePedidoDetail();openPedidoModal(${p.id})">Editar</button>`:''}
+      ${p.estado!=='Recibido'?`<button class="btn" style="color:var(--green);border-color:rgba(77,255,160,0.3);" onclick="cambiarEstadoPedido(${p.id},'Recibido');closePedidoDetail()">✓ Marcar recibido</button>`:''}
+      <button class="btn primary" onclick="closePedidoDetail()">Cerrar</button>
+    </div>`;
+  document.getElementById('pedido-detail-modal').classList.add('open');
+}
+
+function closePedidoDetail() { document.getElementById('pedido-detail-modal').classList.remove('open'); viewPedidoId=null; }
+
+async function deletePedido() {
+  if (!confirm('¿Eliminar este pedido?')) return;
+  const { error } = await db.from('pedidos').delete().eq('id', viewPedidoId);
+  if (error) { showToast('Error al eliminar', 'err'); return; }
+  showToast('Pedido eliminado', 'ok'); closePedidoDetail(); await loadPedidos();
+}
+
+function exportPedidos() {
+  if (!pedidos.length) { showToast('No hay pedidos para exportar', 'err'); return; }
+  const h = ['Descripción','Referencia','Máquina','Estado','Fecha Pedido','Notas'];
+  const rows = pedidos.map(p=>[p.descripcion||'',p.referencia||'',p.maquina||'',p.estado||'',p.fecha_pedido||'',p.notas||'']);
+  const csv = [h,...rows].map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
+  a.download = 'happyjob_pedidos_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
   showToast('Excel exportado', 'ok');
 }
 
