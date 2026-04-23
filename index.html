@@ -312,7 +312,7 @@
       <div class="nav-item" id="nav-revisiones" onclick="showModule('revisiones')"><span class="nav-dot"></span> Revisiones</div>
       <div class="nav-item" id="nav-tareas" onclick="showModule('tareas')"><span class="nav-dot"></span> Tareas</div>
       <div class="nav-item" id="nav-pedidos" onclick="showModule('pedidos')"><span class="nav-dot"></span> Pedidos</div>
-      <div class="nav-item" id="nav-semana" onclick="showModule('semana')"><span class="nav-dot"></span> Semana <span class="nav-soon">pronto</span></div>
+      <div class="nav-item" id="nav-semana" onclick="showModule('semana')"><span class="nav-dot"></span> Semana</div>
       <div class="nav-item" id="nav-usuarios" onclick="showModule('usuarios')" style="display:none;color:var(--accent)"><span class="nav-dot" style="background:var(--accent)"></span> Usuarios</div>
     </nav>
     <main class="main">
@@ -366,12 +366,13 @@
           </div>
 
           <!-- Semana -->
-          <div onclick="showModule('semana')" style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:24px;cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden;" onmouseover="this.style.borderColor='rgba(255,255,255,0.2)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)';this.style.transform='translateY(0)'">
+          <div onclick="showModule('semana')" style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:24px;cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden;" onmouseover="this.style.borderColor='rgba(160,120,255,0.3)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)';this.style.transform='translateY(0)'">
             <div style="font-size:32px;margin-bottom:12px;">📅</div>
             <div style="font-size:16px;font-weight:600;margin-bottom:4px;">Semana</div>
             <div style="font-size:12px;color:var(--text2);margin-bottom:16px;">Planificación semanal</div>
-            <div style="font-size:13px;color:var(--text3);font-family:var(--mono);background:var(--bg3);padding:6px 10px;border-radius:var(--radius);display:inline-block;">Próximamente</div>
-            <div style="position:absolute;bottom:16px;right:16px;font-size:11px;color:var(--text3);font-family:var(--mono);">pronto →</div>
+            <div style="font-size:28px;font-weight:600;color:#a078ff;font-family:var(--mono);" id="dash-semana-count">—</div>
+            <div style="font-size:11px;color:var(--text3);font-family:var(--mono);">tareas pendientes</div>
+            <div style="position:absolute;bottom:16px;right:16px;font-size:11px;color:#a078ff;font-family:var(--mono);">entrar →</div>
           </div>
 
         </div>
@@ -537,7 +538,58 @@
         <div class="result-info" id="p-result-info"></div>
         <div id="pedidos-list"><div class="empty"><div class="empty-icon">📦</div><div>Cargando pedidos...</div></div></div>
       </div>
-      <div id="mod-semana" style="display:none;"><div class="page-header"><div><div style="margin-bottom:8px;"><span onclick="showModule('dashboard')" style="font-size:12px;color:var(--text3);font-family:var(--mono);cursor:pointer;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">← Inicio</span></div><div class="page-title">Semana</div><div class="page-sub">Próximamente</div></div></div><div class="empty"><div class="empty-icon">📅</div><div>Este módulo se añadirá próximamente</div></div></div>
+      <div id="mod-semana" style="display:none;">
+        <div class="page-header">
+          <div>
+            <div style="margin-bottom:8px;"><span onclick="showModule('dashboard')" style="font-size:12px;color:var(--text3);font-family:var(--mono);cursor:pointer;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">← Inicio</span></div>
+            <div class="page-title">Planificación Semanal</div>
+            <div class="page-sub" id="semana-rango">—</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <button class="btn" onclick="semanaAnterior()">← Anterior</button>
+            <button class="btn" onclick="semanaSiguiente()">Siguiente →</button>
+            <button class="btn" onclick="semanaHoy()" id="btn-semana-hoy">Hoy</button>
+            <button class="btn" onclick="exportSemanaPDF()">⬇ PDF</button>
+            <button class="btn" style="color:#a078ff;border-color:rgba(160,120,255,0.3);" onclick="openPropuestaModal()">💡 Proponer tarea</button>
+            <button class="btn primary" id="btn-add-semana-tarea" onclick="openSemanaTareaModal()">+ Nueva tarea</button>
+          </div>
+        </div>
+
+        <!-- Stats semana -->
+        <div class="stats-row">
+          <div class="stat-card"><div class="stat-label">total tareas</div><div class="stat-value accent" id="st-total">—</div></div>
+          <div class="stat-card"><div class="stat-label">🔴 alta prioridad</div><div class="stat-value" id="st-alta" style="color:var(--red)">—</div></div>
+          <div class="stat-card"><div class="stat-label">✅ completadas</div><div class="stat-value" id="st-comp" style="color:var(--green)">—</div></div>
+          <div class="stat-card"><div class="stat-label">⏳ pendientes</div><div class="stat-value" id="st-pend" style="color:var(--orange)">—</div></div>
+          <div class="stat-card"><div class="stat-label">💡 propuestas</div><div class="stat-value" id="st-prop" style="color:#a078ff">—</div></div>
+        </div>
+
+        <!-- Tareas de la semana -->
+        <div style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-size:13px;font-weight:600;color:var(--text2);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.5px;">🚀 Tareas de la semana</div>
+        </div>
+        <div id="semana-tareas-list" style="margin-bottom:24px;"></div>
+
+        <!-- Notas e incidencias -->
+        <div style="margin-bottom:8px;font-size:13px;font-weight:600;color:var(--text2);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.5px;">📝 Notas e incidencias</div>
+        <div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:24px;">
+          <textarea id="semana-notas" style="width:100%;background:transparent;border:none;outline:none;color:var(--text1);font-size:13px;font-family:inherit;resize:vertical;min-height:80px;" placeholder="Avisos, falta de material, imprevistos..."></textarea>
+          <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+            <button class="btn sm" onclick="guardarNotas()">Guardar notas</button>
+          </div>
+        </div>
+
+        <!-- Revisiones rápidas automáticas -->
+        <div style="margin-bottom:8px;font-size:13px;font-weight:600;color:var(--text2);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.5px;">⚡ Revisiones rápidas</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">Generadas automáticamente — revisiones vencidas y urgentes</div>
+        <div id="semana-revisiones-rapidas" style="margin-bottom:24px;"></div>
+
+        <!-- Propuestas pendientes (solo admin) -->
+        <div id="semana-propuestas-section" style="display:none;">
+          <div style="margin-bottom:8px;font-size:13px;font-weight:600;color:#a078ff;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.5px;">💡 Propuestas pendientes de aprobar</div>
+          <div id="semana-propuestas-list" style="margin-bottom:24px;"></div>
+        </div>
+      </div>
       <div id="mod-usuarios" style="display:none;">
         <div class="page-header"><div><div style="margin-bottom:8px;"><span onclick="showModule('dashboard')" style="font-size:12px;color:var(--text3);font-family:var(--mono);cursor:pointer;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">← Inicio</span></div><div class="page-title">Gestión de usuarios</div><div class="page-sub">Activa cuentas y gestiona permisos por módulo</div></div></div>
         <div id="users-list"><div class="empty"><div class="empty-icon">👥</div><div>Cargando usuarios...</div></div></div>
@@ -643,6 +695,68 @@
           <div style="margin-top:8px;text-align:right;"><button class="btn primary" onclick="addUpdate()">Añadir</button></div>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVA TAREA SEMANA -->
+<div class="modal-overlay" id="semana-tarea-modal">
+  <div class="modal" style="max-width:580px;">
+    <div class="modal-header"><div class="modal-title" id="semana-tarea-modal-title">Nueva tarea</div><button class="modal-close" onclick="closeSemanaTareaModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Prioridad</label>
+          <select class="form-input" id="stf-prioridad">
+            <option value="ALTA">🔴 ALTA</option>
+            <option value="MEDIA" selected>🟡 MEDIA</option>
+            <option value="BAJA">🟢 BAJA</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Día</label>
+          <select class="form-input" id="stf-dia">
+            <option value="SEMANA">Toda la semana</option>
+            <option value="LUNES">Lunes</option>
+            <option value="MARTES">Martes</option>
+            <option value="MIÉRCOLES">Miércoles</option>
+            <option value="JUEVES">Jueves</option>
+            <option value="VIERNES">Viernes</option>
+          </select>
+        </div>
+        <div class="form-group full"><label class="form-label">Descripción *</label><input type="text" class="form-input" id="stf-desc" placeholder="Ej: LAZPIUR-1 revisar correas de transmisión" /></div>
+        <div class="form-group"><label class="form-label">Responsable</label>
+          <select class="form-input" id="stf-resp">
+            <option value="General">General</option>
+            <option>Raul</option><option>Georgi</option><option>Oscar</option><option>J.Ramon</option><option>Kamilla</option><option>Juanjo</option><option>Ana</option><option>Kike</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Estado</label>
+          <select class="form-input" id="stf-estado">
+            <option value="Pendiente">Pendiente</option>
+            <option value="En curso">En curso</option>
+            <option value="Completada">Completada</option>
+          </select>
+        </div>
+        <div class="form-group full"><label class="form-label">Notas</label><textarea class="form-input" id="stf-notas" placeholder="Información adicional..." style="min-height:60px;"></textarea></div>
+      </div>
+      <div class="modal-actions"><button class="btn" onclick="closeSemanaTareaModal()">Cancelar</button><button class="btn primary" onclick="saveSemanaTarea()" id="semana-tarea-save-btn">Guardar tarea</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PROPONER TAREA -->
+<div class="modal-overlay" id="propuesta-modal">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header"><div class="modal-title">💡 Proponer tarea</div><button class="modal-close" onclick="closePropuestaModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full"><label class="form-label">Descripción de la propuesta *</label><textarea class="form-input" id="propf-desc" placeholder="Describe la tarea que propones..." style="min-height:80px;"></textarea></div>
+        <div class="form-group"><label class="form-label">Tu nombre</label>
+          <select class="form-input" id="propf-autor">
+            <option>Raul</option><option>Georgi</option><option>Oscar</option><option>J.Ramon</option><option>Kamilla</option><option>Juanjo</option><option>Ana</option><option>Kike</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-actions"><button class="btn" onclick="closePropuestaModal()">Cancelar</button><button class="btn primary" onclick="savePropuesta()">Enviar propuesta</button></div>
     </div>
   </div>
 </div>
@@ -754,6 +868,7 @@ let editPermsId = null;
 let blockTimer = null;
 let pedidos = [], editPedidoId = null, viewPedidoId = null;
 let revisiones = [], editRevisionId = null, viewRevisionId = null;
+let semanaTareas = [], editSemanaTareaId = null, semanaOffset = 0;
 
 // ═══════════════════ SEGURIDAD — BLOQUEO ═══════════════════
 function getSecData() {
@@ -1035,6 +1150,7 @@ function enterApp() {
   loadItems();
   loadPedidos();
   loadRevisiones();
+  loadSemanaTareas();
 }
 
 function updateDashboard() {
@@ -1052,6 +1168,9 @@ function updateDashboard() {
   const alertCount = revisiones.filter(r => calcEstado(r) === 'VENCIDA' || calcEstado(r) === 'URGENTE').length;
   const dashRev = document.getElementById('dash-revisiones-count');
   if (dashRev) dashRev.textContent = alertCount || '—';
+  const semPend = semanaTareas.filter(t => t.estado !== 'Completada' && t.tipo !== 'propuesta' && enSemanaActual(t)).length;
+  const dashSem = document.getElementById('dash-semana-count');
+  if (dashSem) dashSem.textContent = semPend || '—';
 }
 
 async function doLogout() {
@@ -1227,6 +1346,7 @@ function showModule(mod) {
   if (mod==='tareas') loadTareas();
   if (mod==='pedidos') loadPedidos();
   if (mod==='revisiones') loadRevisiones();
+  if (mod==='semana') loadSemana();
 }
 
 // ═══════════════════ USUARIOS ═══════════════════
@@ -1869,6 +1989,350 @@ function exportRevisiones() {
   a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
   a.download = 'happyjob_revisiones_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
   showToast('Excel exportado', 'ok');
+}
+
+// ═══════════════════ SEMANA ═══════════════════
+const DIAS_SEMANA = ['LUNES','MARTES','MIÉRCOLES','JUEVES','VIERNES'];
+const PRIORIDAD_CFG = {
+  'ALTA':  { color:'var(--red)',    bg:'rgba(255,107,107,0.12)', border:'rgba(255,107,107,0.3)',  emoji:'🔴' },
+  'MEDIA': { color:'#e8d44d',      bg:'rgba(232,212,77,0.12)',  border:'rgba(232,212,77,0.3)',   emoji:'🟡' },
+  'BAJA':  { color:'var(--green)', bg:'rgba(77,255,160,0.12)',  border:'rgba(77,255,160,0.3)',   emoji:'🟢' },
+};
+const ESTADO_CFG_S = {
+  'Pendiente':  { color:'var(--text3)', bg:'var(--bg3)', border:'var(--border)' },
+  'En curso':   { color:'var(--blue)',  bg:'rgba(77,166,255,0.1)', border:'rgba(77,166,255,0.3)' },
+  'Completada': { color:'var(--green)', bg:'rgba(77,255,160,0.1)', border:'rgba(77,255,160,0.3)' },
+};
+
+function getLunesDe(offset) {
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const dow = hoy.getDay(); // 0=dom
+  const diffLunes = dow === 0 ? -6 : 1 - dow;
+  const lunes = new Date(hoy); lunes.setDate(hoy.getDate() + diffLunes + offset * 7);
+  return lunes;
+}
+
+function getISOSemana(lunes) {
+  const viernes = new Date(lunes); viernes.setDate(lunes.getDate() + 4);
+  const pad = n => String(n).padStart(2,'0');
+  return `${lunes.getFullYear()}-W${pad(getNumSemana(lunes))}`;
+}
+
+function getNumSemana(d) {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(),0,1));
+  return Math.ceil((((date - yearStart) / 86400000) + 1)/7);
+}
+
+function semanaKey(lunes) { return getISOSemana(lunes); }
+
+function enSemanaActual(t) {
+  const lunes = getLunesDe(0);
+  return t.semana_key === semanaKey(lunes);
+}
+
+function semanaAnterior() { semanaOffset--; loadSemana(); }
+function semanaSiguiente() { semanaOffset++; loadSemana(); }
+function semanaHoy() { semanaOffset = 0; loadSemana(); }
+
+async function loadSemanaTareas() {
+  const { data } = await db.from('semana_tareas').select('*').order('created_at');
+  semanaTareas = data || [];
+  updateDashboard();
+}
+
+async function loadSemana() {
+  const { data } = await db.from('semana_tareas').select('*').order('prioridad_orden', { ascending: true });
+  semanaTareas = data || [];
+  renderSemana();
+}
+
+function renderSemana() {
+  const lunes = getLunesDe(semanaOffset);
+  const viernes = new Date(lunes); viernes.setDate(lunes.getDate() + 4);
+  const fmtFecha = d => d.toLocaleDateString('es-ES', { day:'2-digit', month:'2-digit' });
+  document.getElementById('semana-rango').textContent =
+    `Semana del ${fmtFecha(lunes)} al ${fmtFecha(viernes)} de ${lunes.getFullYear()}`;
+
+  const key = semanaKey(lunes);
+  const isAdmin = currentUser.email === ADMIN_EMAIL;
+
+  // Tareas normales de esta semana
+  const tareas = semanaTareas.filter(t => t.semana_key === key && t.tipo !== 'propuesta');
+  const propuestas = semanaTareas.filter(t => t.semana_key === key && t.tipo === 'propuesta');
+
+  // Stats
+  document.getElementById('st-total').textContent = tareas.length;
+  document.getElementById('st-alta').textContent = tareas.filter(t=>t.prioridad==='ALTA').length;
+  document.getElementById('st-comp').textContent = tareas.filter(t=>t.estado==='Completada').length;
+  document.getElementById('st-pend').textContent = tareas.filter(t=>t.estado==='Pendiente').length;
+  document.getElementById('st-prop').textContent = propuestas.length;
+
+  // Tareas — ordenadas prioridad + completadas al final
+  const orden = { ALTA:0, MEDIA:1, BAJA:2 };
+  const sorted = [...tareas].sort((a,b) => {
+    if (a.estado==='Completada' && b.estado!=='Completada') return 1;
+    if (b.estado==='Completada' && a.estado!=='Completada') return -1;
+    return (orden[a.prioridad]||1) - (orden[b.prioridad]||1);
+  });
+
+  const listEl = document.getElementById('semana-tareas-list');
+  if (!sorted.length) {
+    listEl.innerHTML = '<div class="empty"><div class="empty-icon">📅</div><div>No hay tareas esta semana. ¡Añade la primera!</div></div>';
+  } else {
+    // Cabecera tabla
+    listEl.innerHTML = `
+    <div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;">
+      <div style="display:grid;grid-template-columns:90px 1fr 110px 100px 110px ${isAdmin?'80px':''};gap:0;padding:10px 16px;border-bottom:0.5px solid var(--border);font-size:11px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;">
+        <div>Prioridad</div><div>Tarea</div><div>Día</div><div>Responsable</div><div>Estado</div>${isAdmin?'<div></div>':''}
+      </div>
+      ${sorted.map(t => {
+        const pc = PRIORIDAD_CFG[t.prioridad]||PRIORIDAD_CFG['MEDIA'];
+        const ec = ESTADO_CFG_S[t.estado]||ESTADO_CFG_S['Pendiente'];
+        const completada = t.estado === 'Completada';
+        return `<div style="display:grid;grid-template-columns:90px 1fr 110px 100px 110px ${isAdmin?'80px':''};gap:0;padding:12px 16px;border-bottom:0.5px solid var(--border);align-items:center;${completada?'opacity:0.5':''}" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
+          <div><span style="font-size:11px;font-family:var(--mono);color:${pc.color};background:${pc.bg};border:0.5px solid ${pc.border};padding:3px 8px;border-radius:99px;">${pc.emoji} ${t.prioridad}</span></div>
+          <div style="font-size:13px;${completada?'text-decoration:line-through;color:var(--text3)':''}">${t.descripcion||'—'}<br>${t.notas?'<span style="font-size:11px;color:var(--text3);font-style:italic;">'+t.notas+'</span>':''}</div>
+          <div style="font-size:12px;color:var(--text2);">${t.dia==='SEMANA'?'Toda la semana':t.dia||'—'}</div>
+          <div style="font-size:12px;color:var(--text2);">${t.responsable||'General'}</div>
+          <div>
+            <select style="font-size:11px;background:${ec.bg};border:0.5px solid ${ec.border};color:${ec.color};border-radius:99px;padding:3px 8px;font-family:var(--mono);cursor:pointer;" onchange="cambiarEstadoTarea(${t.id},this.value)">
+              <option ${t.estado==='Pendiente'?'selected':''}>Pendiente</option>
+              <option ${t.estado==='En curso'?'selected':''}>En curso</option>
+              <option ${t.estado==='Completada'?'selected':''}>Completada</option>
+            </select>
+          </div>
+          ${isAdmin?`<div style="display:flex;gap:4px;">
+            <button class="btn sm" onclick="openSemanaTareaModal(${t.id})" title="Editar">✏️</button>
+            <button class="btn sm danger" onclick="deleteSemanaTarea(${t.id})" title="Eliminar">✕</button>
+          </div>`:''}
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+
+  // Notas guardadas
+  const notaKey = `semana_notas_${key}`;
+  db.from('semana_notas').select('notas').eq('semana_key', key).single().then(({data}) => {
+    document.getElementById('semana-notas').value = data?.notas || '';
+  });
+
+  // Revisiones rápidas automáticas
+  const rapidas = revisiones.filter(r => {
+    const e = calcEstado(r); return e === 'VENCIDA' || e === 'URGENTE';
+  });
+  const rapEl = document.getElementById('semana-revisiones-rapidas');
+  if (!rapidas.length) {
+    rapEl.innerHTML = '<div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px;font-size:13px;color:var(--green);">✅ No hay revisiones vencidas ni urgentes esta semana.</div>';
+  } else {
+    rapEl.innerHTML = `<div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;">
+      ${rapidas.map(r => {
+        const e = calcEstado(r); const c = REV_ESTADO_CFG[e];
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:0.5px solid var(--border);gap:12px;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
+          <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
+            <span style="font-size:12px;font-family:var(--mono);color:${c.text};background:${c.bg};border:0.5px solid ${c.border};padding:3px 8px;border-radius:99px;white-space:nowrap;">${c.emoji} ${c.label}</span>
+            <div><div style="font-size:12px;font-weight:500;">${r.maquina}</div><div style="font-size:11px;color:var(--text2);">${r.tarea}</div></div>
+          </div>
+          <button class="btn sm" style="color:var(--green);border-color:rgba(77,255,160,0.3);white-space:nowrap;" onclick="marcarRealizada(${r.id});renderSemana()">✓ Hecha</button>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+
+  // Propuestas (solo admin)
+  const propSection = document.getElementById('semana-propuestas-section');
+  const propList = document.getElementById('semana-propuestas-list');
+  if (isAdmin && propuestas.length) {
+    propSection.style.display = 'block';
+    propList.innerHTML = propuestas.map(p => `
+      <div style="background:var(--bg2);border:0.5px solid rgba(160,120,255,0.3);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div><div style="font-size:13px;">${p.descripcion}</div><div style="font-size:11px;color:var(--text3);margin-top:2px;">Propuesto por: ${p.responsable||'—'}</div></div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn sm" style="color:var(--green);border-color:rgba(77,255,160,0.3);" onclick="aprobarPropuesta(${p.id})">✓ Aprobar</button>
+          <button class="btn sm danger" onclick="deleteSemanaTarea(${p.id})">✕</button>
+        </div>
+      </div>`).join('');
+  } else {
+    propSection.style.display = 'none';
+  }
+
+  // Btn nueva tarea solo admin
+  const btnAdd = document.getElementById('btn-add-semana-tarea');
+  if (btnAdd) btnAdd.style.display = isAdmin ? '' : 'none';
+
+  updateDashboard();
+}
+
+async function cambiarEstadoTarea(id, estado) {
+  await db.from('semana_tareas').update({ estado }).eq('id', id);
+  await loadSemana();
+}
+
+async function guardarNotas() {
+  const lunes = getLunesDe(semanaOffset);
+  const key = semanaKey(lunes);
+  const notas = document.getElementById('semana-notas').value;
+  const { data } = await db.from('semana_notas').select('id').eq('semana_key', key).single();
+  if (data) await db.from('semana_notas').update({ notas }).eq('semana_key', key);
+  else await db.from('semana_notas').insert({ semana_key: key, notas });
+  showToast('Notas guardadas ✓', 'ok');
+}
+
+function openSemanaTareaModal(id) {
+  editSemanaTareaId = id || null;
+  const lunes = getLunesDe(semanaOffset);
+  if (id) {
+    const t = semanaTareas.find(x=>x.id===id); if (!t) return;
+    document.getElementById('stf-prioridad').value = t.prioridad||'MEDIA';
+    document.getElementById('stf-dia').value = t.dia||'SEMANA';
+    document.getElementById('stf-desc').value = t.descripcion||'';
+    document.getElementById('stf-resp').value = t.responsable||'General';
+    document.getElementById('stf-estado').value = t.estado||'Pendiente';
+    document.getElementById('stf-notas').value = t.notas||'';
+    document.getElementById('semana-tarea-modal-title').textContent = 'Editar tarea';
+  } else {
+    ['stf-desc','stf-notas'].forEach(x=>document.getElementById(x).value='');
+    document.getElementById('stf-prioridad').value = 'MEDIA';
+    document.getElementById('stf-dia').value = 'SEMANA';
+    document.getElementById('stf-resp').value = 'General';
+    document.getElementById('stf-estado').value = 'Pendiente';
+    document.getElementById('semana-tarea-modal-title').textContent = 'Nueva tarea';
+  }
+  document.getElementById('semana-tarea-modal').classList.add('open');
+}
+
+function closeSemanaTareaModal() { document.getElementById('semana-tarea-modal').classList.remove('open'); editSemanaTareaId=null; }
+
+async function saveSemanaTarea() {
+  const desc = document.getElementById('stf-desc').value.trim();
+  if (!desc) { showToast('La descripción es obligatoria', 'err'); return; }
+  const lunes = getLunesDe(semanaOffset);
+  const key = semanaKey(lunes);
+  const btn = document.getElementById('semana-tarea-save-btn');
+  btn.disabled=true; btn.textContent='Guardando...';
+  const prioridad = document.getElementById('stf-prioridad').value;
+  const orden = { ALTA:0, MEDIA:1, BAJA:2 };
+  const payload = {
+    semana_key: key,
+    prioridad,
+    prioridad_orden: orden[prioridad]||1,
+    dia: document.getElementById('stf-dia').value,
+    descripcion: desc,
+    responsable: document.getElementById('stf-resp').value,
+    estado: document.getElementById('stf-estado').value,
+    notas: document.getElementById('stf-notas').value.trim(),
+    tipo: 'tarea'
+  };
+  let error;
+  if (editSemanaTareaId) ({ error } = await db.from('semana_tareas').update(payload).eq('id', editSemanaTareaId));
+  else ({ error } = await db.from('semana_tareas').insert(payload));
+  btn.disabled=false; btn.textContent='Guardar tarea';
+  if (error) { showToast('Error: '+error.message, 'err'); return; }
+  showToast(editSemanaTareaId?'Tarea actualizada':'Tarea añadida ✓', 'ok');
+  closeSemanaTareaModal(); await loadSemana();
+}
+
+async function deleteSemanaTarea(id) {
+  if (!confirm('¿Eliminar esta tarea?')) return;
+  await db.from('semana_tareas').delete().eq('id', id);
+  showToast('Tarea eliminada', 'ok'); await loadSemana();
+}
+
+function openPropuestaModal() { document.getElementById('propuesta-modal').classList.add('open'); }
+function closePropuestaModal() { document.getElementById('propuesta-modal').classList.remove('open'); }
+
+async function savePropuesta() {
+  const desc = document.getElementById('propf-desc').value.trim();
+  if (!desc) { showToast('Escribe una descripción', 'err'); return; }
+  const lunes = getLunesDe(semanaOffset);
+  const key = semanaKey(lunes);
+  const { error } = await db.from('semana_tareas').insert({
+    semana_key: key, descripcion: desc,
+    responsable: document.getElementById('propf-autor').value,
+    tipo: 'propuesta', prioridad: 'MEDIA', prioridad_orden: 1,
+    dia: 'SEMANA', estado: 'Pendiente'
+  });
+  if (error) { showToast('Error: '+error.message, 'err'); return; }
+  showToast('Propuesta enviada ✓ — el administrador la revisará', 'ok');
+  closePropuestaModal(); await loadSemana();
+}
+
+async function aprobarPropuesta(id) {
+  await db.from('semana_tareas').update({ tipo:'tarea' }).eq('id', id);
+  showToast('Propuesta aprobada ✓', 'ok'); await loadSemana();
+}
+
+function exportSemanaPDF() {
+  const lunes = getLunesDe(semanaOffset);
+  const viernes = new Date(lunes); viernes.setDate(lunes.getDate() + 4);
+  const fmtFecha = d => d.toLocaleDateString('es-ES', { day:'2-digit', month:'2-digit' });
+  const key = semanaKey(lunes);
+  const tareas = semanaTareas.filter(t => t.semana_key === key && t.tipo !== 'propuesta');
+  const rapidas = revisiones.filter(r => { const e=calcEstado(r); return e==='VENCIDA'||e==='URGENTE'; });
+  const notas = document.getElementById('semana-notas').value;
+
+  const orden = { ALTA:0, MEDIA:1, BAJA:2 };
+  const sorted = [...tareas].sort((a,b) => (orden[a.prioridad]||1)-(orden[b.prioridad]||1));
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>Planificación Semanal MSA</title>
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 12px; color: #1a1a1a; margin: 24px; }
+    h1 { font-size: 18px; margin-bottom: 2px; }
+    .sub { font-size: 12px; color: #555; margin-bottom: 20px; }
+    h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #1a1a1a; padding-bottom: 4px; margin: 20px 0 10px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+    th { background: #1a1a1a; color: white; padding: 7px 10px; text-align: left; font-size: 11px; }
+    td { padding: 7px 10px; border-bottom: 1px solid #e0e0e0; vertical-align: top; }
+    tr:nth-child(even) td { background: #f9f9f9; }
+    .alta { color: #c0392b; font-weight: bold; }
+    .media { color: #e67e22; }
+    .baja { color: #27ae60; }
+    .box { background: #f5f5f5; border: 1px solid #ddd; border-radius: 6px; padding: 12px; min-height: 60px; font-size: 12px; color: #333; white-space: pre-wrap; }
+    .footer { margin-top: 30px; font-size: 10px; color: #aaa; text-align: right; }
+    @media print { body { margin: 16px; } }
+  </style></head><body>
+  <h1>📋 PLANIFICACIÓN SEMANAL: MSA</h1>
+  <div class="sub">Semana del ${fmtFecha(lunes)} al ${fmtFecha(viernes)} de ${lunes.getFullYear()} &nbsp;|&nbsp; Generado: ${new Date().toLocaleDateString('es-ES')}</div>
+
+  <h2>🚀 Tareas de la semana</h2>
+  <table>
+    <thead><tr><th>Prioridad</th><th>Descripción</th><th>Día</th><th>Responsable</th><th>Estado</th></tr></thead>
+    <tbody>
+      ${sorted.length ? sorted.map(t=>`<tr>
+        <td class="${(t.prioridad||'').toLowerCase()}">${t.prioridad||'—'}</td>
+        <td>${t.descripcion||'—'}${t.notas?'<br><span style="font-size:10px;color:#777;font-style:italic;">'+t.notas+'</span>':''}</td>
+        <td>${t.dia==='SEMANA'?'Toda la semana':t.dia||'—'}</td>
+        <td>${t.responsable||'General'}</td>
+        <td>${t.estado||'—'}</td>
+      </tr>`).join('') : '<tr><td colspan="5" style="color:#999;text-align:center;">Sin tareas esta semana</td></tr>'}
+    </tbody>
+  </table>
+
+  <h2>📝 Notas e incidencias</h2>
+  <div class="box">${notas || 'Sin notas esta semana.'}</div>
+
+  <h2>⚡ Revisiones rápidas</h2>
+  <table>
+    <thead><tr><th>Estado</th><th>Máquina</th><th>Tarea</th><th>Días restantes</th></tr></thead>
+    <tbody>
+      ${rapidas.length ? rapidas.map(r=>{
+        const dias=calcDias(r);
+        const diasTxt=dias===null?'—':dias<=0?Math.abs(dias)+'d de retraso':dias+'d restantes';
+        return `<tr><td style="color:${dias<=0?'#c0392b':'#e67e22'};font-weight:bold;">${calcEstado(r)}</td><td>${r.maquina}</td><td>${r.tarea}</td><td>${diasTxt}</td></tr>`;
+      }).join('') : '<tr><td colspan="4" style="color:#27ae60;text-align:center;">✅ Sin revisiones urgentes</td></tr>'}
+    </tbody>
+  </table>
+
+  <div class="footer">HappyJob · MSA Mantenimiento · ${new Date().toLocaleDateString('es-ES')}</div>
+  </body></html>`;
+
+  const w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(() => w.print(), 500);
 }
 
 // ═══════════════════ INICIO ═══════════════════
