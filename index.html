@@ -309,7 +309,7 @@
       <div class="sidebar-section">Módulos</div>
       <div class="nav-item" id="nav-dashboard" onclick="showModule('dashboard')"><span class="nav-dot"></span> Inicio</div>
       <div class="nav-item active" id="nav-almacen" onclick="showModule('almacen')"><span class="nav-dot"></span> Almacén</div>
-      <div class="nav-item" id="nav-revisiones" onclick="showModule('revisiones')"><span class="nav-dot"></span> Revisiones <span class="nav-soon">pronto</span></div>
+      <div class="nav-item" id="nav-revisiones" onclick="showModule('revisiones')"><span class="nav-dot"></span> Revisiones</div>
       <div class="nav-item" id="nav-tareas" onclick="showModule('tareas')"><span class="nav-dot"></span> Tareas</div>
       <div class="nav-item" id="nav-pedidos" onclick="showModule('pedidos')"><span class="nav-dot"></span> Pedidos</div>
       <div class="nav-item" id="nav-semana" onclick="showModule('semana')"><span class="nav-dot"></span> Semana <span class="nav-soon">pronto</span></div>
@@ -336,12 +336,13 @@
           </div>
 
           <!-- Revisiones -->
-          <div onclick="showModule('revisiones')" style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:24px;cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden;" onmouseover="this.style.borderColor='rgba(255,255,255,0.2)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)';this.style.transform='translateY(0)'">
+          <div onclick="showModule('revisiones')" style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:24px;cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden;" onmouseover="this.style.borderColor='rgba(255,107,107,0.3)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)';this.style.transform='translateY(0)'">
             <div style="font-size:32px;margin-bottom:12px;">🔧</div>
             <div style="font-size:16px;font-weight:600;margin-bottom:4px;">Revisiones</div>
             <div style="font-size:12px;color:var(--text2);margin-bottom:16px;">Mantenimiento periódico</div>
-            <div style="font-size:13px;color:var(--text3);font-family:var(--mono);background:var(--bg3);padding:6px 10px;border-radius:var(--radius);display:inline-block;">Próximamente</div>
-            <div style="position:absolute;bottom:16px;right:16px;font-size:11px;color:var(--text3);font-family:var(--mono);">pronto →</div>
+            <div style="font-size:28px;font-weight:600;color:var(--red);font-family:var(--mono);" id="dash-revisiones-count">—</div>
+            <div style="font-size:11px;color:var(--text3);font-family:var(--mono);">vencidas / urgentes</div>
+            <div style="position:absolute;bottom:16px;right:16px;font-size:11px;color:var(--red);font-family:var(--mono);">entrar →</div>
           </div>
 
           <!-- Tareas -->
@@ -407,7 +408,53 @@
         <div class="result-info" id="result-info"></div>
         <div id="item-list"><div class="empty"><div class="empty-icon">📦</div><div>Cargando...</div></div></div>
       </div>
-      <div id="mod-revisiones" style="display:none;"><div class="page-header"><div><div style="margin-bottom:8px;"><span onclick="showModule('dashboard')" style="font-size:12px;color:var(--text3);font-family:var(--mono);cursor:pointer;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">← Inicio</span></div><div class="page-title">Revisiones periódicas</div><div class="page-sub">Próximamente</div></div></div><div class="empty"><div class="empty-icon">🔧</div><div>Este módulo se añadirá próximamente</div></div></div>
+      <div id="mod-revisiones" style="display:none;">
+        <div class="page-header">
+          <div>
+            <div style="margin-bottom:8px;"><span onclick="showModule('dashboard')" style="font-size:12px;color:var(--text3);font-family:var(--mono);cursor:pointer;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">← Inicio</span></div>
+            <div class="page-title">Revisiones periódicas</div>
+            <div class="page-sub">Mantenimiento preventivo de máquinas</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn" onclick="exportRevisiones()">↓ Exportar Excel</button>
+            <button class="btn primary" id="btn-add-revision" onclick="openRevisionModal()">+ Nueva revisión</button>
+          </div>
+        </div>
+        <!-- Stats -->
+        <div class="stats-row">
+          <div class="stat-card"><div class="stat-label">total</div><div class="stat-value accent" id="rt-total">—</div></div>
+          <div class="stat-card"><div class="stat-label">🔴 vencidas</div><div class="stat-value" id="rt-vencidas" style="color:var(--red)">—</div></div>
+          <div class="stat-card"><div class="stat-label">🟠 urgentes ≤3d</div><div class="stat-value" id="rt-urgentes" style="color:var(--orange)">—</div></div>
+          <div class="stat-card"><div class="stat-label">🟡 próximas ≤7d</div><div class="stat-value" id="rt-proximas" style="color:#e8d44d">—</div></div>
+          <div class="stat-card"><div class="stat-label">🟢 ok</div><div class="stat-value" id="rt-ok" style="color:var(--green)">—</div></div>
+        </div>
+        <!-- Filtros -->
+        <div class="search-row">
+          <input type="text" class="search-input" id="r-search" placeholder="Buscar tarea o máquina..." oninput="renderRevisiones()" />
+          <select class="search-input" id="r-filter-estado" onchange="renderRevisiones()" style="max-width:180px;">
+            <option value="">Todos los estados</option>
+            <option value="VENCIDA">🔴 Vencida</option>
+            <option value="URGENTE">🟠 Urgente</option>
+            <option value="PROXIMA">🟡 Próxima</option>
+            <option value="OK">🟢 OK</option>
+          </select>
+          <select class="search-input" id="r-filter-maq" onchange="renderRevisiones()" style="max-width:180px;">
+            <option value="">Todas las máquinas</option>
+            <option>CHAMPS-1</option><option>CHAMPS-2</option>
+            <option>KSB200-1</option><option>KSB200-2</option><option>KSB200-3</option>
+            <option>KSV-2</option>
+            <option>LAZPIUR-1</option><option>LAZPIUR-2</option><option>LAZPIUR-3</option><option>LAZPIUR-4</option>
+            <option>REGG-1</option><option>REGG-2</option><option>REGG-3</option>
+            <option>GV3-1</option><option>GV3-2</option>
+            <option>SIMA-2</option><option>SIMA-3</option><option>SIMA-4</option>
+            <option>WA-10</option>
+            <option>ENV-1</option><option>ENV-2</option><option>ENV-3</option>
+            <option>T.DECARGA</option>
+          </select>
+        </div>
+        <div class="result-info" id="r-result-info"></div>
+        <div id="revisiones-list"><div class="empty"><div class="empty-icon">🔧</div><div>Cargando revisiones...</div></div></div>
+      </div>
       <div id="mod-tareas" style="display:none;">
         <div class="page-header">
           <div>
@@ -600,6 +647,45 @@
   </div>
 </div>
 
+<!-- MODAL NUEVA/EDITAR REVISIÓN -->
+<div class="modal-overlay" id="revision-form-modal">
+  <div class="modal" style="max-width:620px;">
+    <div class="modal-header"><div class="modal-title" id="revision-form-title">Nueva revisión</div><button class="modal-close" onclick="closeRevisionModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Máquina *</label>
+          <select class="form-input" id="rf-maq">
+            <option value="">— Seleccionar —</option>
+            <option>CHAMPS-1</option><option>CHAMPS-2</option>
+            <option>KSB200-1</option><option>KSB200-2</option><option>KSB200-3</option>
+            <option>KSV-2</option>
+            <option>LAZPIUR-1</option><option>LAZPIUR-2</option><option>LAZPIUR-3</option><option>LAZPIUR-4</option>
+            <option>REGG-1</option><option>REGG-2</option><option>REGG-3</option>
+            <option>GV3-1</option><option>GV3-2</option>
+            <option>SIMA-2</option><option>SIMA-3</option><option>SIMA-4</option>
+            <option>WA-10</option>
+            <option>ENV-1</option><option>ENV-2</option><option>ENV-3</option>
+            <option>T.DECARGA</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Periodicidad (días) *</label><input type="number" class="form-input" id="rf-periodo" placeholder="Ej: 30" min="1" /></div>
+        <div class="form-group full"><label class="form-label">Tarea de revisión *</label><input type="text" class="form-input" id="rf-tarea" placeholder="Ej: Engrase rodamiento de centrífugo" /></div>
+        <div class="form-group"><label class="form-label">Última revisión</label><input type="date" class="form-input" id="rf-ultima" /></div>
+        <div class="form-group full"><label class="form-label">Notas</label><textarea class="form-input" id="rf-notas" placeholder="Información adicional..." style="min-height:60px;"></textarea></div>
+      </div>
+      <div class="modal-actions"><button class="btn" onclick="closeRevisionModal()">Cancelar</button><button class="btn primary" onclick="saveRevision()" id="revision-save-btn">Guardar revisión</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE REVISIÓN -->
+<div class="modal-overlay" id="revision-detail-modal">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-header"><div class="modal-title" id="rd-title">Revisión</div><button class="modal-close" onclick="closeRevisionDetail()">✕</button></div>
+    <div class="modal-body" id="rd-body"></div>
+  </div>
+</div>
+
 <!-- MODAL NUEVA/EDITAR PEDIDO -->
 <div class="modal-overlay" id="pedido-form-modal">
   <div class="modal" style="max-width:620px;">
@@ -667,6 +753,7 @@ let pinBuffer = '', pinMode = '', pinFirst = '';
 let editPermsId = null;
 let blockTimer = null;
 let pedidos = [], editPedidoId = null, viewPedidoId = null;
+let revisiones = [], editRevisionId = null, viewRevisionId = null;
 
 // ═══════════════════ SEGURIDAD — BLOQUEO ═══════════════════
 function getSecData() {
@@ -947,6 +1034,7 @@ function enterApp() {
   showModule('dashboard');
   loadItems();
   loadPedidos();
+  loadRevisiones();
 }
 
 function updateDashboard() {
@@ -961,6 +1049,9 @@ function updateDashboard() {
   const pendCount = pedidos.filter(p => p.estado === 'Pendiente' || p.estado === 'Enviar email').length;
   const dashPed = document.getElementById('dash-pedidos-count');
   if (dashPed) dashPed.textContent = pendCount || '—';
+  const alertCount = revisiones.filter(r => calcEstado(r) === 'VENCIDA' || calcEstado(r) === 'URGENTE').length;
+  const dashRev = document.getElementById('dash-revisiones-count');
+  if (dashRev) dashRev.textContent = alertCount || '—';
 }
 
 async function doLogout() {
@@ -1135,6 +1226,7 @@ function showModule(mod) {
   if (mod==='dashboard') updateDashboard();
   if (mod==='tareas') loadTareas();
   if (mod==='pedidos') loadPedidos();
+  if (mod==='revisiones') loadRevisiones();
 }
 
 // ═══════════════════ USUARIOS ═══════════════════
@@ -1566,6 +1658,216 @@ function exportPedidos() {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
   a.download = 'happyjob_pedidos_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
+  showToast('Excel exportado', 'ok');
+}
+
+// ═══════════════════ REVISIONES ═══════════════════
+function calcEstado(r) {
+  if (!r.ultima_revision || !r.periodicidad_dias) return 'OK';
+  const ultima = new Date(r.ultima_revision);
+  const proxima = new Date(ultima);
+  proxima.setDate(proxima.getDate() + Number(r.periodicidad_dias));
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const dias = Math.round((proxima - hoy) / 86400000);
+  if (dias <= 0) return 'VENCIDA';
+  if (dias <= 3) return 'URGENTE';
+  if (dias <= 7) return 'PROXIMA';
+  return 'OK';
+}
+
+function calcDias(r) {
+  if (!r.ultima_revision || !r.periodicidad_dias) return null;
+  const ultima = new Date(r.ultima_revision);
+  const proxima = new Date(ultima);
+  proxima.setDate(proxima.getDate() + Number(r.periodicidad_dias));
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  return Math.round((proxima - hoy) / 86400000);
+}
+
+function calcProxima(r) {
+  if (!r.ultima_revision || !r.periodicidad_dias) return null;
+  const ultima = new Date(r.ultima_revision);
+  const proxima = new Date(ultima);
+  proxima.setDate(proxima.getDate() + Number(r.periodicidad_dias));
+  return proxima.toLocaleDateString('es-ES');
+}
+
+const REV_ESTADO_CFG = {
+  'VENCIDA': { emoji:'🔴', label:'VENCIDA',  bg:'rgba(255,107,107,0.12)', border:'rgba(255,107,107,0.3)', text:'var(--red)'    },
+  'URGENTE': { emoji:'🟠', label:'URGENTE',  bg:'rgba(255,179,71,0.12)',  border:'rgba(255,179,71,0.3)',  text:'var(--orange)' },
+  'PROXIMA': { emoji:'🟡', label:'PRÓXIMA',  bg:'rgba(232,212,77,0.12)',  border:'rgba(232,212,77,0.3)',  text:'#e8d44d'       },
+  'OK':      { emoji:'🟢', label:'OK',       bg:'rgba(77,255,160,0.12)',  border:'rgba(77,255,160,0.3)',  text:'var(--green)'  },
+};
+
+async function loadRevisiones() {
+  const { data, error } = await db.from('revisiones').select('*').order('maquina', { ascending: true });
+  if (error) { showToast('Error al cargar revisiones', 'err'); return; }
+  revisiones = data || [];
+  updateRevisionesStats();
+  renderRevisiones();
+  updateDashboard();
+}
+
+function updateRevisionesStats() {
+  document.getElementById('rt-total').textContent = revisiones.length;
+  document.getElementById('rt-vencidas').textContent = revisiones.filter(r=>calcEstado(r)==='VENCIDA').length;
+  document.getElementById('rt-urgentes').textContent = revisiones.filter(r=>calcEstado(r)==='URGENTE').length;
+  document.getElementById('rt-proximas').textContent = revisiones.filter(r=>calcEstado(r)==='PROXIMA').length;
+  document.getElementById('rt-ok').textContent = revisiones.filter(r=>calcEstado(r)==='OK').length;
+}
+
+function renderRevisiones() {
+  const q    = (document.getElementById('r-search').value||'').toLowerCase();
+  const est  = document.getElementById('r-filter-estado').value;
+  const maq  = document.getElementById('r-filter-maq').value;
+  const f    = revisiones.filter(r => {
+    const mQ = !q||(r.tarea||'').toLowerCase().includes(q)||(r.maquina||'').toLowerCase().includes(q);
+    const estado = calcEstado(r);
+    return mQ && (!est||estado===est) && (!maq||r.maquina===maq);
+  });
+  // Ordenar: VENCIDA → URGENTE → PROXIMA → OK
+  const order = { VENCIDA:0, URGENTE:1, PROXIMA:2, OK:3 };
+  f.sort((a,b) => order[calcEstado(a)] - order[calcEstado(b)]);
+  document.getElementById('r-result-info').textContent = f.length + ' revisión' + (f.length!==1?'es':'');
+  const list = document.getElementById('revisiones-list');
+  const isAdmin = currentUser.email === ADMIN_EMAIL;
+  if (!f.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">🔧</div><div>No hay revisiones que coincidan</div></div>'; return; }
+  list.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;">'+f.map(r => {
+    const estado = calcEstado(r);
+    const c = REV_ESTADO_CFG[estado];
+    const dias = calcDias(r);
+    const proxima = calcProxima(r);
+    const diasTxt = dias === null ? '—' : dias <= 0 ? Math.abs(dias)+' días de retraso' : dias+' días restantes';
+    return `<div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px;cursor:pointer;transition:all 0.15s;" onclick="openRevisionDetail(${r.id})" onmouseover="this.style.borderColor='var(--border2)';this.style.background='var(--bg3)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)';this.style.background='var(--bg2)'">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <span style="font-size:11px;font-family:var(--mono);color:var(--accent);background:rgba(232,255,77,0.08);border:0.5px solid rgba(232,255,77,0.15);padding:3px 8px;border-radius:99px;">${r.maquina||'—'}</span>
+            <span style="font-size:11px;font-family:var(--mono);color:var(--text3);">cada ${r.periodicidad_dias}d</span>
+          </div>
+          <div style="font-size:14px;font-weight:500;margin-bottom:4px;line-height:1.4;">${r.tarea||'(sin descripción)'}</div>
+          <div style="font-size:12px;color:var(--text2);">Próxima: ${proxima||'—'} · ${diasTxt}</div>
+          ${r.notas?'<div style="font-size:11px;color:var(--text3);margin-top:4px;font-style:italic;">'+r.notas+'</div>':''}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+          <span style="font-size:12px;font-family:var(--mono);color:${c.text};background:${c.bg};border:0.5px solid ${c.border};padding:4px 12px;border-radius:99px;white-space:nowrap;">${c.emoji} ${c.label}</span>
+          <button class="btn sm" style="color:var(--green);border-color:rgba(77,255,160,0.3);" onclick="event.stopPropagation();marcarRealizada(${r.id})">✓ Realizada</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('')+'</div>';
+}
+
+async function marcarRealizada(id) {
+  const hoy = new Date().toISOString().slice(0,10);
+  const r = revisiones.find(x=>x.id===id); if(!r) return;
+  // Guardar historial
+  const hist = r.historial || [];
+  hist.push({ fecha: hoy, autor: userProfile.nombre||'Admin' });
+  const { error } = await db.from('revisiones').update({ ultima_revision: hoy, historial: hist }).eq('id', id);
+  if (error) { showToast('Error al actualizar', 'err'); return; }
+  showToast('✓ Revisión marcada como realizada', 'ok');
+  await loadRevisiones();
+}
+
+function openRevisionModal(id) {
+  editRevisionId = id || null;
+  if (id) {
+    const r = revisiones.find(x=>x.id===id); if (!r) return;
+    document.getElementById('rf-maq').value = r.maquina||'';
+    document.getElementById('rf-periodo').value = r.periodicidad_dias||'';
+    document.getElementById('rf-tarea').value = r.tarea||'';
+    document.getElementById('rf-ultima').value = r.ultima_revision||'';
+    document.getElementById('rf-notas').value = r.notas||'';
+    document.getElementById('revision-form-title').textContent = 'Editar revisión';
+  } else {
+    ['rf-tarea','rf-notas','rf-periodo'].forEach(x=>document.getElementById(x).value='');
+    document.getElementById('rf-maq').value = '';
+    document.getElementById('rf-ultima').value = new Date().toISOString().slice(0,10);
+    document.getElementById('revision-form-title').textContent = 'Nueva revisión';
+  }
+  document.getElementById('revision-form-modal').classList.add('open');
+}
+
+function closeRevisionModal() { document.getElementById('revision-form-modal').classList.remove('open'); editRevisionId=null; }
+
+async function saveRevision() {
+  const maq    = document.getElementById('rf-maq').value;
+  const tarea  = document.getElementById('rf-tarea').value.trim();
+  const period = document.getElementById('rf-periodo').value;
+  if (!maq || !tarea || !period) { showToast('Máquina, tarea y periodicidad son obligatorios', 'err'); return; }
+  const btn = document.getElementById('revision-save-btn');
+  btn.disabled=true; btn.textContent='Guardando...';
+  const payload = {
+    maquina: maq,
+    tarea: tarea,
+    periodicidad_dias: parseInt(period),
+    ultima_revision: document.getElementById('rf-ultima').value || null,
+    notas: document.getElementById('rf-notas').value.trim()
+  };
+  let error;
+  if (editRevisionId) ({ error } = await db.from('revisiones').update(payload).eq('id', editRevisionId));
+  else ({ error } = await db.from('revisiones').insert(payload));
+  btn.disabled=false; btn.textContent='Guardar revisión';
+  if (error) { showToast('Error: '+error.message, 'err'); return; }
+  showToast(editRevisionId?'Revisión actualizada':'Revisión añadida ✓', 'ok');
+  closeRevisionModal(); await loadRevisiones();
+}
+
+function openRevisionDetail(id) {
+  viewRevisionId = id;
+  const r = revisiones.find(x=>x.id===id); if (!r) return;
+  const estado = calcEstado(r);
+  const c = REV_ESTADO_CFG[estado];
+  const isAdmin = currentUser.email === ADMIN_EMAIL;
+  const dias = calcDias(r);
+  const proxima = calcProxima(r);
+  const diasTxt = dias === null ? '—' : dias <= 0 ? Math.abs(dias)+' días de retraso' : dias+' días restantes';
+  const hist = r.historial || [];
+  document.getElementById('rd-title').textContent = r.tarea||'Revisión';
+  document.getElementById('rd-body').innerHTML = `
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+      <span style="font-size:12px;font-family:var(--mono);color:${c.text};background:${c.bg};border:0.5px solid ${c.border};padding:5px 12px;border-radius:99px;">${c.emoji} ${c.label}</span>
+      <span style="font-size:12px;font-family:var(--mono);color:var(--accent);background:rgba(232,255,77,0.08);border:0.5px solid rgba(232,255,77,0.15);padding:5px 12px;border-radius:99px;">${r.maquina||'—'}</span>
+    </div>
+    <div class="detail-rows">
+      <div class="detail-row"><span class="dl">Tarea</span><span class="dv">${r.tarea||'—'}</span></div>
+      <div class="detail-row"><span class="dl">Periodicidad</span><span class="dv">Cada ${r.periodicidad_dias} días</span></div>
+      <div class="detail-row"><span class="dl">Última revisión</span><span class="dv">${r.ultima_revision?new Date(r.ultima_revision).toLocaleDateString('es-ES'):'—'}</span></div>
+      <div class="detail-row"><span class="dl">Próxima revisión</span><span class="dv">${proxima||'—'}</span></div>
+      <div class="detail-row"><span class="dl">Días restantes</span><span class="dv" style="color:${c.text}">${diasTxt}</span></div>
+      <div class="detail-row"><span class="dl">Notas</span><span class="dv">${r.notas||'—'}</span></div>
+    </div>
+    ${hist.length ? `<div style="margin-top:16px;"><div style="font-size:11px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Historial</div><div style="max-height:140px;overflow-y:auto;">${hist.slice().reverse().map(h=>`<div style="border-left:2px solid var(--border2);padding:6px 12px;margin-bottom:6px;font-size:12px;color:var(--text2);">${h.fecha} · ${h.autor||'Admin'}</div>`).join('')}</div></div>` : ''}
+    <div class="modal-actions">
+      ${isAdmin?`<button class="btn danger" onclick="deleteRevision()">Eliminar</button>`:''}
+      ${isAdmin?`<button class="btn" onclick="closeRevisionDetail();openRevisionModal(${r.id})">Editar</button>`:''}
+      <button class="btn" style="color:var(--green);border-color:rgba(77,255,160,0.3);" onclick="marcarRealizada(${r.id});closeRevisionDetail()">✓ Realizada hoy</button>
+      <button class="btn primary" onclick="closeRevisionDetail()">Cerrar</button>
+    </div>`;
+  document.getElementById('revision-detail-modal').classList.add('open');
+}
+
+function closeRevisionDetail() { document.getElementById('revision-detail-modal').classList.remove('open'); viewRevisionId=null; }
+
+async function deleteRevision() {
+  if (!confirm('¿Eliminar esta revisión?')) return;
+  const { error } = await db.from('revisiones').delete().eq('id', viewRevisionId);
+  if (error) { showToast('Error al eliminar', 'err'); return; }
+  showToast('Revisión eliminada', 'ok'); closeRevisionDetail(); await loadRevisiones();
+}
+
+function exportRevisiones() {
+  if (!revisiones.length) { showToast('No hay revisiones para exportar', 'err'); return; }
+  const h = ['Máquina','Tarea','Periodicidad (días)','Última Revisión','Próxima Revisión','Días Restantes','Estado','Notas'];
+  const rows = revisiones.map(r => {
+    const dias = calcDias(r);
+    return [r.maquina||'', r.tarea||'', r.periodicidad_dias||'', r.ultima_revision||'', calcProxima(r)||'', dias!==null?dias:'', calcEstado(r), r.notas||''];
+  });
+  const csv = [h,...rows].map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
+  a.download = 'happyjob_revisiones_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
   showToast('Excel exportado', 'ok');
 }
 
