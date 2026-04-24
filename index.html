@@ -1053,27 +1053,39 @@
 
 <!-- MODAL NUEVA/EDITAR PEDIDO -->
 <div class="modal-overlay" id="pedido-form-modal">
-  <div class="modal" style="max-width:620px;">
+  <div class="modal" style="max-width:640px;">
     <div class="modal-header"><div class="modal-title" id="pedido-form-title">Nuevo pedido</div><button class="modal-close" onclick="closePedidoModal()">✕</button></div>
     <div class="modal-body">
       <div class="form-grid">
         <div class="form-group full"><label class="form-label">Descripción del artículo *</label><input type="text" class="form-input" id="pf-desc" placeholder="Ej: Rodamiento SKF 6205-2Z" /></div>
         <div class="form-group"><label class="form-label">Referencia</label><input type="text" class="form-input" id="pf-ref" placeholder="Ej: SKF-6205" /></div>
+        <div class="form-group"><label class="form-label">Cantidad</label><input type="number" class="form-input" id="pf-cantidad" placeholder="Ej: 2" min="1" /></div>
+        <div class="form-group"><label class="form-label">Proveedor</label><input type="text" class="form-input" id="pf-proveedor" placeholder="Ej: Rodamientos García S.L." /></div>
+        <div class="form-group"><label class="form-label">Precio aprox. (€)</label><input type="number" class="form-input" id="pf-precio" placeholder="Ej: 24.50" step="0.01" min="0" /></div>
         <div class="form-group"><label class="form-label">Máquina</label>
           <select class="form-input" id="pf-maq">
             <option value="">— Seleccionar —</option>
-            <option>CHAMPS</option><option>KSB200</option><option>KSB200-3</option><option>KSV-2</option><option>LAZPIUR</option><option>REGG</option><option>GV3</option><option>SIMA2</option><option>SIMA3Y4</option><option>WA10</option><option>ENV</option><option>T.DECARGA</option>
+            <option>CHAMPS-1</option><option>CHAMPS-2</option><option>KSB200-1</option><option>KSB200-2</option><option>KSB200-3</option><option>KSV-2</option><option>LAZPIUR-1</option><option>LAZPIUR-2</option><option>LAZPIUR-3</option><option>LAZPIUR-4</option><option>REGG-1</option><option>REGG-2</option><option>REGG-3</option><option>GV3-1</option><option>GV3-2</option><option>SIMA-2</option><option>SIMA-3</option><option>SIMA-4</option><option>WA-10</option><option>ENV-1</option><option>ENV-2</option><option>ENV-3</option><option>T.DECARGA</option>
           </select>
         </div>
         <div class="form-group"><label class="form-label">Estado</label>
           <select class="form-input" id="pf-estado">
-            <option>Pendiente</option>
-            <option>Enviar email</option>
-            <option>Recibido</option>
+            <option>Pendiente</option><option>Enviar email</option><option>Recibido</option>
           </select>
         </div>
         <div class="form-group"><label class="form-label">Fecha del pedido</label><input type="date" class="form-input" id="pf-fecha" /></div>
-        <div class="form-group full"><label class="form-label">Notas</label><textarea class="form-input" id="pf-notas" placeholder="Proveedor, cantidad, información adicional..." style="min-height:70px;"></textarea></div>
+        <div class="form-group"><label class="form-label">Nº Albarán</label><input type="text" class="form-input" id="pf-albaran" placeholder="Ej: ALB-2026-0042" /></div>
+        <div class="form-group full"><label class="form-label">Notas</label><textarea class="form-input" id="pf-notas" placeholder="Información adicional..." style="min-height:60px;"></textarea></div>
+        <!-- Foto albarán -->
+        <div class="form-group full">
+          <label class="form-label">Foto del albarán</label>
+          <div id="pf-foto-preview" style="margin-bottom:8px;display:none;"><img id="pf-foto-img" style="max-width:100%;max-height:180px;border-radius:var(--radius);border:0.5px solid var(--border);" /></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <label class="btn" style="cursor:pointer;">📷 Cámara<input type="file" id="pf-foto-input" accept="image/*" capture="environment" style="display:none;" onchange="previewPedidoFoto(this)"></label>
+            <label class="btn" style="cursor:pointer;">🖼 Galería<input type="file" id="pf-foto-gal" accept="image/*" style="display:none;" onchange="previewPedidoFoto(this)"></label>
+            <button class="btn danger" id="pf-foto-del" style="display:none;" onclick="deletePedidoFoto()">✕ Quitar foto</button>
+          </div>
+        </div>
       </div>
       <div class="modal-actions"><button class="btn" onclick="closePedidoModal()">Cancelar</button><button class="btn primary" onclick="savePedido()" id="pedido-save-btn">Guardar pedido</button></div>
     </div>
@@ -1896,6 +1908,28 @@ const PEDIDO_ESTADO_COLORS = {
   'Recibido':     { bg:'rgba(77,255,160,0.12)',  border:'rgba(77,255,160,0.3)',  text:'var(--green)'  },
 };
 
+let pedidoFotoData = null, pedidoFotoExistente = null;
+
+function previewPedidoFoto(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    pedidoFotoData = e.target.result;
+    document.getElementById('pf-foto-img').src = pedidoFotoData;
+    document.getElementById('pf-foto-preview').style.display = 'block';
+    document.getElementById('pf-foto-del').style.display = '';
+  };
+  reader.readAsDataURL(file);
+}
+
+function deletePedidoFoto() {
+  pedidoFotoData = null; pedidoFotoExistente = null;
+  document.getElementById('pf-foto-preview').style.display = 'none';
+  document.getElementById('pf-foto-del').style.display = 'none';
+  document.getElementById('pf-foto-input').value = '';
+  document.getElementById('pf-foto-gal').value = '';
+}
+
 async function loadPedidos() {
   const { data, error } = await db.from('pedidos').select('*').order('created_at', { ascending: false });
   if (error) { showToast('Error al cargar pedidos', 'err'); return; }
@@ -1927,14 +1961,17 @@ function renderPedidos() {
   list.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;">'+f.map(p => {
     const c = PEDIDO_ESTADO_COLORS[p.estado] || PEDIDO_ESTADO_COLORS['Pendiente'];
     const fecha = p.fecha_pedido ? new Date(p.fecha_pedido).toLocaleDateString('es-ES') : '—';
+    const extras = [p.referencia?'Ref: '+p.referencia:'', p.maquina||'', p.proveedor||'', fecha].filter(Boolean).join(' · ');
     return `<div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px;cursor:pointer;transition:all 0.15s;" onclick="openPedidoDetail(${p.id})" onmouseover="this.style.borderColor='var(--border2)';this.style.background='var(--bg3)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)';this.style.background='var(--bg2)'">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
         <div style="flex:1;min-width:0;">
           <div style="font-size:14px;font-weight:500;margin-bottom:4px;line-height:1.4;">${p.descripcion||'(sin descripción)'}</div>
-          <div style="font-size:12px;color:var(--text2);">${p.referencia?'Ref: '+p.referencia+' · ':''} ${p.maquina?p.maquina+' · ':''} ${fecha}</div>
+          <div style="font-size:12px;color:var(--text2);">${extras}</div>
+          ${p.albaran?'<div style="font-size:11px;color:var(--text3);margin-top:2px;">Albarán: '+p.albaran+'</div>':''}
           ${p.notas?'<div style="font-size:11px;color:var(--text3);margin-top:4px;font-style:italic;">'+p.notas+'</div>':''}
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+          ${p.albaran_foto?'<span style="font-size:11px;color:var(--blue);font-family:var(--mono);">📷 albarán</span>':''}
           <span style="font-size:12px;font-family:var(--mono);color:${c.text};background:${c.bg};border:0.5px solid ${c.border};padding:4px 12px;border-radius:99px;white-space:nowrap;">${p.estado}</span>
           ${isAdmin?`<button class="btn sm" style="color:var(--green);border-color:rgba(77,255,160,0.3);" onclick="event.stopPropagation();cambiarEstadoPedido(${p.id},'Recibido')" ${p.estado==='Recibido'?'disabled':''}>✓ Recibido</button>`:''}
         </div>
@@ -1952,17 +1989,32 @@ async function cambiarEstadoPedido(id, nuevoEstado) {
 
 function openPedidoModal(id) {
   editPedidoId = id || null;
+  pedidoFotoData = null; pedidoFotoExistente = null;
+  document.getElementById('pf-foto-preview').style.display = 'none';
+  document.getElementById('pf-foto-del').style.display = 'none';
+  document.getElementById('pf-foto-input').value = '';
+  document.getElementById('pf-foto-gal').value = '';
   if (id) {
     const p = pedidos.find(x=>x.id===id); if (!p) return;
     document.getElementById('pf-desc').value = p.descripcion||'';
     document.getElementById('pf-ref').value = p.referencia||'';
+    document.getElementById('pf-cantidad').value = p.cantidad||'';
+    document.getElementById('pf-proveedor').value = p.proveedor||'';
+    document.getElementById('pf-precio').value = p.precio||'';
     document.getElementById('pf-maq').value = p.maquina||'';
     document.getElementById('pf-estado').value = p.estado||'Pendiente';
     document.getElementById('pf-fecha').value = p.fecha_pedido||'';
+    document.getElementById('pf-albaran').value = p.albaran||'';
     document.getElementById('pf-notas').value = p.notas||'';
+    if (p.albaran_foto) {
+      pedidoFotoExistente = p.albaran_foto;
+      document.getElementById('pf-foto-img').src = p.albaran_foto;
+      document.getElementById('pf-foto-preview').style.display = 'block';
+      document.getElementById('pf-foto-del').style.display = '';
+    }
     document.getElementById('pedido-form-title').textContent = 'Editar pedido';
   } else {
-    ['pf-desc','pf-ref','pf-notas'].forEach(x=>document.getElementById(x).value='');
+    ['pf-desc','pf-ref','pf-notas','pf-cantidad','pf-proveedor','pf-precio','pf-albaran'].forEach(x=>document.getElementById(x).value='');
     document.getElementById('pf-maq').value = '';
     document.getElementById('pf-estado').value = 'Pendiente';
     document.getElementById('pf-fecha').value = new Date().toISOString().slice(0,10);
@@ -1978,13 +2030,32 @@ async function savePedido() {
   if (!desc) { showToast('La descripción es obligatoria', 'err'); return; }
   const btn = document.getElementById('pedido-save-btn');
   btn.disabled=true; btn.textContent='Guardando...';
+
+  // Subir foto albarán si hay nueva
+  let albaran_foto = pedidoFotoExistente || null;
+  if (pedidoFotoData) {
+    try {
+      const blob = await (await fetch(pedidoFotoData)).blob();
+      const fname = `albaranes/${Date.now()}.jpg`;
+      const { error: upErr } = await db.storage.from('fotos').upload(fname, blob, { contentType:'image/jpeg', upsert:true });
+      if (!upErr) { const { data: ud } = db.storage.from('fotos').getPublicUrl(fname); albaran_foto = ud.publicUrl; }
+    } catch(e) {}
+  } else if (!pedidoFotoExistente) {
+    albaran_foto = null;
+  }
+
   const payload = {
     descripcion: desc,
     referencia: document.getElementById('pf-ref').value.trim(),
+    cantidad: document.getElementById('pf-cantidad').value ? parseInt(document.getElementById('pf-cantidad').value) : null,
+    proveedor: document.getElementById('pf-proveedor').value.trim(),
+    precio: document.getElementById('pf-precio').value ? parseFloat(document.getElementById('pf-precio').value) : null,
     maquina: document.getElementById('pf-maq').value,
     estado: document.getElementById('pf-estado').value,
     fecha_pedido: document.getElementById('pf-fecha').value || null,
-    notas: document.getElementById('pf-notas').value.trim()
+    albaran: document.getElementById('pf-albaran').value.trim(),
+    notas: document.getElementById('pf-notas').value.trim(),
+    albaran_foto
   };
   let error;
   if (editPedidoId) ({ error } = await db.from('pedidos').update(payload).eq('id', editPedidoId));
@@ -2006,11 +2077,16 @@ function openPedidoDetail(id) {
     <div style="margin-bottom:16px;">
       <span style="font-size:12px;font-family:var(--mono);color:${c.text};background:${c.bg};border:0.5px solid ${c.border};padding:5px 12px;border-radius:99px;">${p.estado}</span>
     </div>
+    ${p.albaran_foto?`<div style="margin-bottom:16px;"><img src="${p.albaran_foto}" style="max-width:100%;max-height:220px;border-radius:var(--radius);border:0.5px solid var(--border);cursor:pointer;" onclick="window.open('${p.albaran_foto}','_blank')" title="Clic para ampliar" /></div>`:''}
     <div class="detail-rows">
       <div class="detail-row"><span class="dl">Descripción</span><span class="dv">${p.descripcion||'—'}</span></div>
       <div class="detail-row"><span class="dl">Referencia</span><span class="dv">${p.referencia||'—'}</span></div>
+      <div class="detail-row"><span class="dl">Cantidad</span><span class="dv">${p.cantidad||'—'}</span></div>
+      <div class="detail-row"><span class="dl">Proveedor</span><span class="dv">${p.proveedor||'—'}</span></div>
+      <div class="detail-row"><span class="dl">Precio aprox.</span><span class="dv">${p.precio!=null?p.precio.toFixed(2)+' €':'—'}</span></div>
       <div class="detail-row"><span class="dl">Máquina</span><span class="dv">${p.maquina||'—'}</span></div>
       <div class="detail-row"><span class="dl">Fecha pedido</span><span class="dv">${fecha}</span></div>
+      <div class="detail-row"><span class="dl">Nº Albarán</span><span class="dv">${p.albaran||'—'}</span></div>
       <div class="detail-row"><span class="dl">Notas</span><span class="dv">${p.notas||'—'}</span></div>
     </div>
     <div class="modal-actions">
@@ -2033,8 +2109,8 @@ async function deletePedido() {
 
 function exportPedidos() {
   if (!pedidos.length) { showToast('No hay pedidos para exportar', 'err'); return; }
-  const h = ['Descripción','Referencia','Máquina','Estado','Fecha Pedido','Notas'];
-  const rows = pedidos.map(p=>[p.descripcion||'',p.referencia||'',p.maquina||'',p.estado||'',p.fecha_pedido||'',p.notas||'']);
+  const h = ['Descripción','Referencia','Cantidad','Proveedor','Precio (€)','Máquina','Estado','Fecha Pedido','Nº Albarán','Notas'];
+  const rows = pedidos.map(p=>[p.descripcion||'',p.referencia||'',p.cantidad||'',p.proveedor||'',p.precio!=null?p.precio:'',p.maquina||'',p.estado||'',p.fecha_pedido||'',p.albaran||'',p.notas||'']);
   const csv = [h,...rows].map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
