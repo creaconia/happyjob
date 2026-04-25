@@ -555,14 +555,15 @@
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <button class="btn" onclick="exportPedidos()">↓ Exportar Excel</button>
+            <button class="btn" id="btn-config-emails" onclick="openConfigEmails()" style="color:var(--blue);border-color:rgba(77,166,255,0.3);display:none;">⚙️ Emails</button>
             <button class="btn primary" id="btn-add-pedido" onclick="openPedidoModal()">+ Nuevo pedido</button>
           </div>
         </div>
         <!-- Stats pedidos -->
         <div class="stats-row">
           <div class="stat-card"><div class="stat-label">total</div><div class="stat-value accent" id="pt-total">—</div></div>
-          <div class="stat-card"><div class="stat-label">pendientes</div><div class="stat-value" id="pt-pend" style="color:var(--orange)">—</div></div>
-          <div class="stat-card"><div class="stat-label">enviar email</div><div class="stat-value" id="pt-email" style="color:var(--blue)">—</div></div>
+          <div class="stat-card"><div class="stat-label">pendientes de pedir</div><div class="stat-value" id="pt-pend" style="color:var(--orange)">—</div></div>
+          <div class="stat-card"><div class="stat-label">realizados</div><div class="stat-value" id="pt-email" style="color:var(--blue)">—</div></div>
           <div class="stat-card"><div class="stat-label">recibidos</div><div class="stat-value" id="pt-recib" style="color:var(--green)">—</div></div>
         </div>
         <!-- Filtros pedidos -->
@@ -570,8 +571,8 @@
           <input type="text" class="search-input" id="p-search" placeholder="Buscar pedido, referencia..." oninput="renderPedidos()" />
           <select class="search-input" id="p-filter-estado" onchange="renderPedidos()" style="max-width:180px;">
             <option value="">Todos los estados</option>
-            <option>Pendiente</option>
-            <option>Enviar email</option>
+            <option>Pendiente de pedir</option>
+            <option>Realizado</option>
             <option>Recibido</option>
           </select>
           <select class="search-input" id="p-filter-maq" onchange="renderPedidos()" style="max-width:160px;">
@@ -1051,6 +1052,42 @@
   </div>
 </div>
 
+<!-- MODAL CONFIGURAR EMAILS -->
+<div class="modal-overlay" id="config-emails-modal">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header"><div class="modal-title">⚙️ Emails de contacto</div><button class="modal-close" onclick="closeConfigEmails()">✕</button></div>
+    <div class="modal-body">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:16px;">Estos emails son privados y solo visibles para el administrador.</div>
+      <div id="config-emails-list" style="margin-bottom:16px;"></div>
+      <div style="display:flex;gap:8px;">
+        <input type="email" class="form-input" id="config-email-nuevo" placeholder="nuevo@email.com" style="flex:1;" />
+        <input type="text" class="form-input" id="config-email-nombre" placeholder="Nombre contacto" style="flex:1;" />
+        <button class="btn primary" onclick="addConfigEmail()">+ Añadir</button>
+      </div>
+      <div class="modal-actions"><button class="btn primary" onclick="closeConfigEmails()">Cerrar</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ENVIAR EMAIL PEDIDO -->
+<div class="modal-overlay" id="email-pedido-modal">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header"><div class="modal-title">📧 Enviar pedido por email</div><button class="modal-close" onclick="closeEmailPedidoModal()">✕</button></div>
+    <div class="modal-body">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:16px;">Selecciona a quién enviar el pedido:</div>
+      <div id="email-destinatarios-list" style="margin-bottom:16px;display:flex;flex-direction:column;gap:8px;"></div>
+      <div style="background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:16px;">
+        <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:6px;">VISTA PREVIA DEL MENSAJE</div>
+        <div id="email-preview" style="font-size:12px;color:var(--text2);white-space:pre-wrap;"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" onclick="closeEmailPedidoModal()">Cancelar</button>
+        <button class="btn primary" onclick="abrirGmail()">📧 Abrir Gmail</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL NUEVA/EDITAR PEDIDO -->
 <div class="modal-overlay" id="pedido-form-modal">
   <div class="modal" style="max-width:640px;">
@@ -1070,7 +1107,7 @@
         </div>
         <div class="form-group"><label class="form-label">Estado</label>
           <select class="form-input" id="pf-estado">
-            <option>Pendiente</option><option>Enviar email</option><option>Recibido</option>
+            <option>Pendiente de pedir</option><option>Realizado</option><option>Recibido</option>
           </select>
         </div>
         <div class="form-group"><label class="form-label">Fecha del pedido</label><input type="date" class="form-input" id="pf-fecha" /></div>
@@ -1411,6 +1448,7 @@ function enterApp() {
   document.getElementById('user-badge').textContent = (userProfile.nombre || currentUser.email) + ' · Salir';
   document.getElementById('btn-add-item').style.display = isAdmin ? 'inline-flex' : 'none';
   document.getElementById('nav-usuarios').style.display = isAdmin ? 'flex' : 'none';
+  const btnCE = document.getElementById('btn-config-emails'); if(btnCE) btnCE.style.display = isAdmin ? '' : 'none';
   showScreen('app');
   showModule('dashboard');
   loadItems();
@@ -1431,7 +1469,7 @@ function updateDashboard() {
   const opciones = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
   document.getElementById('dash-fecha').textContent = ahora.toLocaleDateString('es-ES', opciones);
   document.getElementById('dash-almacen-count').textContent = items.length || '—';
-  const pendCount = pedidos.filter(p => p.estado === 'Pendiente' || p.estado === 'Enviar email').length;
+  const pendCount = pedidos.filter(p => p.estado === 'Pendiente de pedir' || p.estado === 'Realizado').length;
   const dashPed = document.getElementById('dash-pedidos-count');
   if (dashPed) dashPed.textContent = pendCount || '—';
   const alertCount = revisiones.filter(r => calcEstado(r) === 'VENCIDA' || calcEstado(r) === 'URGENTE').length;
@@ -1901,11 +1939,142 @@ function exportTareas() {
   showToast('Excel exportado', 'ok');
 }
 
+// ═══════════════════ SISTEMA DE EMAILS ═══════════════════
+const EMAILS_KEY = 'hj_emails_contacto';
+let emailPedidoActual = null, emailsSeleccionados = new Set();
+
+function getEmails() {
+  try { return JSON.parse(localStorage.getItem(EMAILS_KEY)||'[]'); } catch(e) { return []; }
+}
+function saveEmails(arr) { localStorage.setItem(EMAILS_KEY, JSON.stringify(arr)); }
+
+function openConfigEmails() {
+  renderConfigEmails();
+  document.getElementById('config-emails-modal').classList.add('open');
+}
+function closeConfigEmails() { document.getElementById('config-emails-modal').classList.remove('open'); }
+
+function renderConfigEmails() {
+  const emails = getEmails();
+  const el = document.getElementById('config-emails-list');
+  if (!emails.length) { el.innerHTML='<div style="font-size:13px;color:var(--text3);padding:8px 0;">No hay emails guardados aún.</div>'; return; }
+  el.innerHTML = emails.map((e,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--radius);padding:10px 14px;">
+      <div style="flex:1;"><div style="font-size:13px;">${e.nombre||'Sin nombre'}</div><div style="font-size:11px;color:var(--text3);">${e.email}</div></div>
+      <button class="btn sm danger" onclick="deleteConfigEmail(${i})">✕</button>
+    </div>`).join('');
+}
+
+function addConfigEmail() {
+  const email = document.getElementById('config-email-nuevo').value.trim();
+  const nombre = document.getElementById('config-email-nombre').value.trim();
+  if (!email || !email.includes('@')) { showToast('Email no válido','err'); return; }
+  const emails = getEmails();
+  if (emails.length >= 5) { showToast('Máximo 5 emails','err'); return; }
+  emails.push({ email, nombre: nombre || email });
+  saveEmails(emails);
+  document.getElementById('config-email-nuevo').value = '';
+  document.getElementById('config-email-nombre').value = '';
+  renderConfigEmails();
+  showToast('Email añadido ✓','ok');
+}
+
+function deleteConfigEmail(i) {
+  const emails = getEmails();
+  emails.splice(i,1);
+  saveEmails(emails);
+  renderConfigEmails();
+  showToast('Email eliminado','ok');
+}
+
+function openEmailPedidoModal(id) {
+  const p = pedidos.find(x=>x.id===id); if(!p) return;
+  emailPedidoActual = p;
+  emailsSeleccionados = new Set();
+  const emails = getEmails();
+  const list = document.getElementById('email-destinatarios-list');
+
+  if (!emails.length) {
+    list.innerHTML = `<div style="font-size:13px;color:var(--orange);padding:8px;">No hay emails configurados. <button class="btn sm" onclick="closeEmailPedidoModal();openConfigEmails()">⚙️ Configurar ahora</button></div>`;
+  } else {
+    // Opción "Todos"
+    list.innerHTML = `
+      <label style="display:flex;align-items:center;gap:10px;background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--radius);padding:10px 14px;cursor:pointer;">
+        <input type="checkbox" id="email-todos" onchange="toggleTodosEmails(this)" style="width:16px;height:16px;accent-color:var(--accent);" />
+        <div><div style="font-size:13px;font-weight:500;">Todos</div><div style="font-size:11px;color:var(--text3);">${emails.map(e=>e.email).join(', ')}</div></div>
+      </label>
+      ${emails.map((e,i)=>`
+      <label style="display:flex;align-items:center;gap:10px;background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:10px 14px;cursor:pointer;">
+        <input type="checkbox" class="email-check" value="${e.email}" onchange="updateEmailSeleccion()" style="width:16px;height:16px;accent-color:var(--accent);" />
+        <div><div style="font-size:13px;">${e.nombre}</div><div style="font-size:11px;color:var(--text3);">${e.email}</div></div>
+      </label>`).join('')}`;
+  }
+  actualizarPreviewEmail(p);
+  document.getElementById('email-pedido-modal').classList.add('open');
+}
+
+function toggleTodosEmails(cb) {
+  document.querySelectorAll('.email-check').forEach(c => { c.checked = cb.checked; });
+  updateEmailSeleccion();
+}
+
+function updateEmailSeleccion() {
+  emailsSeleccionados = new Set();
+  document.querySelectorAll('.email-check:checked').forEach(c => emailsSeleccionados.add(c.value));
+  const todos = document.getElementById('email-todos');
+  const all = document.querySelectorAll('.email-check');
+  if (todos) todos.checked = all.length > 0 && [...all].every(c=>c.checked);
+}
+
+function actualizarPreviewEmail(p) {
+  const fecha = p.fecha_pedido ? new Date(p.fecha_pedido).toLocaleDateString('es-ES') : '—';
+  const preview = `PEDIDO — ${p.descripcion||''}
+
+Descripción: ${p.descripcion||'—'}
+Referencia: ${p.referencia||'—'}
+Cantidad: ${p.cantidad||'—'}
+Máquina: ${p.maquina||'—'}
+Proveedor: ${p.proveedor||'—'}
+Fecha: ${fecha}
+Nº Albarán: ${p.albaran||'—'}
+Notas: ${p.notas||'—'}
+${p.albaran_foto?'\nFoto albarán: '+p.albaran_foto:''}
+
+Enviado desde HappyJob — MSA Mantenimiento`;
+  document.getElementById('email-preview').textContent = preview;
+}
+
+function abrirGmail() {
+  if (!emailsSeleccionados.size) { showToast('Selecciona al menos un destinatario','err'); return; }
+  const p = emailPedidoActual; if(!p) return;
+  const fecha = p.fecha_pedido ? new Date(p.fecha_pedido).toLocaleDateString('es-ES') : '—';
+  const to = [...emailsSeleccionados].join(',');
+  const asunto = encodeURIComponent(`Pedido — ${p.descripcion||''}`);
+  const cuerpo = encodeURIComponent(
+`PEDIDO — ${p.descripcion||''}
+
+Descripción: ${p.descripcion||'—'}
+Referencia: ${p.referencia||'—'}
+Cantidad: ${p.cantidad||'—'}
+Máquina: ${p.maquina||'—'}
+Proveedor: ${p.proveedor||'—'}
+Fecha: ${fecha}
+Nº Albarán: ${p.albaran||'—'}
+Notas: ${p.notas||'—'}
+${p.albaran_foto?'\nFoto albarán: '+p.albaran_foto:''}
+
+Enviado desde HappyJob — MSA Mantenimiento`);
+  window.open(`https://mail.google.com/mail/?view=cm&to=${to}&su=${asunto}&body=${cuerpo}`, '_blank');
+  closeEmailPedidoModal();
+}
+
+function closeEmailPedidoModal() { document.getElementById('email-pedido-modal').classList.remove('open'); emailPedidoActual=null; emailsSeleccionados=new Set(); }
+
 // ═══════════════════ PEDIDOS ═══════════════════
 const PEDIDO_ESTADO_COLORS = {
-  'Pendiente':    { bg:'rgba(255,179,71,0.12)',  border:'rgba(255,179,71,0.3)',  text:'var(--orange)' },
-  'Enviar email': { bg:'rgba(77,166,255,0.12)',  border:'rgba(77,166,255,0.3)',  text:'var(--blue)'   },
-  'Recibido':     { bg:'rgba(77,255,160,0.12)',  border:'rgba(77,255,160,0.3)',  text:'var(--green)'  },
+  'Pendiente de pedir': { bg:'rgba(255,179,71,0.12)',  border:'rgba(255,179,71,0.3)',  text:'var(--orange)' },
+  'Realizado':          { bg:'rgba(77,166,255,0.12)',  border:'rgba(77,166,255,0.3)',  text:'var(--blue)'   },
+  'Recibido':           { bg:'rgba(77,255,160,0.12)',  border:'rgba(77,255,160,0.3)',  text:'var(--green)'  },
 };
 
 let pedidoFotoData = null, pedidoFotoExistente = null;
@@ -1941,8 +2110,8 @@ async function loadPedidos() {
 
 function updatePedidosStats() {
   document.getElementById('pt-total').textContent = pedidos.length;
-  document.getElementById('pt-pend').textContent = pedidos.filter(p=>p.estado==='Pendiente').length;
-  document.getElementById('pt-email').textContent = pedidos.filter(p=>p.estado==='Enviar email').length;
+  document.getElementById('pt-pend').textContent = pedidos.filter(p=>p.estado==='Pendiente de pedir').length;
+  document.getElementById('pt-email').textContent = pedidos.filter(p=>p.estado==='Realizado').length;
   document.getElementById('pt-recib').textContent = pedidos.filter(p=>p.estado==='Recibido').length;
 }
 
@@ -1972,6 +2141,7 @@ function renderPedidos() {
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
           ${p.albaran_foto?'<span style="font-size:11px;color:var(--blue);font-family:var(--mono);">📷 albarán</span>':''}
+          <button class="btn sm" style="color:var(--blue);border-color:rgba(77,166,255,0.3);" onclick="event.stopPropagation();openEmailPedidoModal(${p.id})" title="Enviar por email">📧</button>
           <span style="font-size:12px;font-family:var(--mono);color:${c.text};background:${c.bg};border:0.5px solid ${c.border};padding:4px 12px;border-radius:99px;white-space:nowrap;">${p.estado}</span>
           ${isAdmin?`<button class="btn sm" style="color:var(--green);border-color:rgba(77,255,160,0.3);" onclick="event.stopPropagation();cambiarEstadoPedido(${p.id},'Recibido')" ${p.estado==='Recibido'?'disabled':''}>✓ Recibido</button>`:''}
         </div>
@@ -2002,7 +2172,7 @@ function openPedidoModal(id) {
     document.getElementById('pf-proveedor').value = p.proveedor||'';
     document.getElementById('pf-precio').value = p.precio||'';
     document.getElementById('pf-maq').value = p.maquina||'';
-    document.getElementById('pf-estado').value = p.estado||'Pendiente';
+    document.getElementById('pf-estado').value = p.estado||'Pendiente de pedir';
     document.getElementById('pf-fecha').value = p.fecha_pedido||'';
     document.getElementById('pf-albaran').value = p.albaran||'';
     document.getElementById('pf-notas').value = p.notas||'';
@@ -2016,7 +2186,7 @@ function openPedidoModal(id) {
   } else {
     ['pf-desc','pf-ref','pf-notas','pf-cantidad','pf-proveedor','pf-precio','pf-albaran'].forEach(x=>document.getElementById(x).value='');
     document.getElementById('pf-maq').value = '';
-    document.getElementById('pf-estado').value = 'Pendiente';
+    document.getElementById('pf-estado').value = 'Pendiente de pedir';
     document.getElementById('pf-fecha').value = new Date().toISOString().slice(0,10);
     document.getElementById('pedido-form-title').textContent = 'Nuevo pedido';
   }
@@ -2092,6 +2262,7 @@ function openPedidoDetail(id) {
     <div class="modal-actions">
       ${isAdmin?`<button class="btn danger" onclick="deletePedido()">Eliminar</button>`:''}
       ${isAdmin?`<button class="btn" onclick="closePedidoDetail();openPedidoModal(${p.id})">Editar</button>`:''}
+      <button class="btn" style="color:var(--blue);border-color:rgba(77,166,255,0.3);" onclick="closePedidoDetail();openEmailPedidoModal(${p.id})">📧 Enviar email</button>
       ${p.estado!=='Recibido'?`<button class="btn" style="color:var(--green);border-color:rgba(77,255,160,0.3);" onclick="cambiarEstadoPedido(${p.id},'Recibido');closePedidoDetail()">✓ Marcar recibido</button>`:''}
       <button class="btn primary" onclick="closePedidoDetail()">Cerrar</button>
     </div>`;
@@ -3092,8 +3263,8 @@ async function loadInformes() {
       <div style="font-size:13px;font-weight:600;color:var(--text2);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">📦 Pedidos</div>
       <div class="stats-row">
         ${card('','total',ped.length)}
-        ${card('⏳','pendientes',ped.filter(p=>p.estado==='Pendiente').length,'var(--orange)')}
-        ${card('📧','enviar email',ped.filter(p=>p.estado==='Enviar email').length,'var(--blue)')}
+        ${card('⏳','pendientes de pedir',ped.filter(p=>p.estado==='Pendiente de pedir').length,'var(--orange)')}
+        ${card('✅','realizados',ped.filter(p=>p.estado==='Realizado').length,'var(--blue)')}
         ${card('✅','recibidos',ped.filter(p=>p.estado==='Recibido').length,'var(--green)')}
       </div>
     </div>
