@@ -2044,7 +2044,7 @@ Enviado desde HappyJob — MSA Mantenimiento`;
   document.getElementById('email-preview').textContent = preview;
 }
 
-function abrirGmail() {
+async function abrirGmail() {
   if (!emailsSeleccionados.size) { showToast('Selecciona al menos un destinatario','err'); return; }
   const p = emailPedidoActual; if(!p) return;
   const fecha = p.fecha_pedido ? new Date(p.fecha_pedido).toLocaleDateString('es-ES') : '—';
@@ -2064,8 +2064,15 @@ Notas: ${p.notas||'—'}
 ${p.albaran_foto?'\nFoto albarán: '+p.albaran_foto:''}
 
 Enviado desde HappyJob — MSA Mantenimiento`);
+
   window.open(`https://mail.google.com/mail/?view=cm&to=${to}&su=${asunto}&body=${cuerpo}`, '_blank');
+
+  // Marcar como enviado en Supabase
+  const hoy = new Date().toISOString().slice(0,10);
+  await db.from('pedidos').update({ email_enviado: true, email_enviado_fecha: hoy }).eq('id', p.id);
+  showToast('✉️ Gmail abierto — pedido marcado como enviado', 'ok');
   closeEmailPedidoModal();
+  await loadPedidos();
 }
 
 function closeEmailPedidoModal() { document.getElementById('email-pedido-modal').classList.remove('open'); emailPedidoActual=null; emailsSeleccionados=new Set(); }
@@ -2141,6 +2148,7 @@ function renderPedidos() {
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
           ${p.albaran_foto?'<span style="font-size:11px;color:var(--blue);font-family:var(--mono);">📷 albarán</span>':''}
+          ${p.email_enviado?'<span style="font-size:11px;color:var(--green);font-family:var(--mono);" title="Email enviado el '+( p.email_enviado_fecha ? new Date(p.email_enviado_fecha).toLocaleDateString(\'es-ES\') : \'—\')+\'">✉️ enviado</span>':''}
           <button class="btn sm" style="color:var(--blue);border-color:rgba(77,166,255,0.3);" onclick="event.stopPropagation();openEmailPedidoModal(${p.id})" title="Enviar por email">📧</button>
           <span style="font-size:12px;font-family:var(--mono);color:${c.text};background:${c.bg};border:0.5px solid ${c.border};padding:4px 12px;border-radius:99px;white-space:nowrap;">${p.estado}</span>
           ${isAdmin?`<button class="btn sm" style="color:var(--green);border-color:rgba(77,255,160,0.3);" onclick="event.stopPropagation();cambiarEstadoPedido(${p.id},'Recibido')" ${p.estado==='Recibido'?'disabled':''}>✓ Recibido</button>`:''}
@@ -2257,6 +2265,7 @@ function openPedidoDetail(id) {
       <div class="detail-row"><span class="dl">Máquina</span><span class="dv">${p.maquina||'—'}</span></div>
       <div class="detail-row"><span class="dl">Fecha pedido</span><span class="dv">${fecha}</span></div>
       <div class="detail-row"><span class="dl">Nº Albarán</span><span class="dv">${p.albaran||'—'}</span></div>
+      <div class="detail-row"><span class="dl">Email enviado</span><span class="dv">${p.email_enviado?'✉️ Sí — '+( p.email_enviado_fecha ? new Date(p.email_enviado_fecha).toLocaleDateString('es-ES') : '—'):'No enviado'}</span></div>
       <div class="detail-row"><span class="dl">Notas</span><span class="dv">${p.notas||'—'}</span></div>
     </div>
     <div class="modal-actions">
