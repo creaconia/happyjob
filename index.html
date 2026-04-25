@@ -1549,12 +1549,34 @@ function openDetail(id) {
     <div class="modal-actions">
       ${isAdmin?'<button class="btn danger" onclick="deleteItem()">Eliminar</button>':''}
       ${isAdmin?'<button class="btn" onclick="startEdit()">Editar</button>':''}
+      <button class="btn" style="color:var(--orange);border-color:rgba(255,179,71,0.3);" onclick="crearPedidoDesdeAlmacen(${i.id})">📦 Crear pedido</button>
       <button class="btn primary" onclick="closeDetailModal()">Cerrar</button>
     </div>`;
   document.getElementById('detail-modal').classList.add('open');
 }
 
 function closeDetailModal() { document.getElementById('detail-modal').classList.remove('open'); viewId=null; }
+
+function crearPedidoDesdeAlmacen(id) {
+  const i = items.find(x=>x.id===id); if(!i) return;
+  closeDetailModal();
+  // Cambiar a módulo pedidos y abrir modal con datos rellenados
+  showModule('pedidos');
+  // Pequeño delay para que el módulo cargue
+  setTimeout(() => {
+    openPedidoModal();
+    document.getElementById('pf-desc').value = i.descripcion||'';
+    document.getElementById('pf-ref').value = i.referencia||'';
+    document.getElementById('pf-maq').value = i.id_maquina||'';
+    document.getElementById('pf-notas').value = [
+      i.codigo_ubicacion ? 'Ubicación: '+i.codigo_ubicacion : '',
+      i.notas||''
+    ].filter(Boolean).join(' · ');
+    document.getElementById('pf-estado').value = 'Pendiente de pedir';
+    document.getElementById('pf-fecha').value = new Date().toISOString().slice(0,10);
+    showToast('Datos del artículo cargados en el pedido ✓','ok');
+  }, 300);
+}
 
 async function deleteItem() {
   if (!confirm('¿Eliminar este artículo? Esta acción no se puede deshacer.')) return;
