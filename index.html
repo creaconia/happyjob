@@ -1904,6 +1904,7 @@ function openTareaDetail(id) {
       ${isAdmin?`<button class="btn danger" onclick="deleteTarea()">Eliminar</button>`:''}
       ${isAdmin?`<button class="btn" onclick="closeTareaDetail();openTareaModal(${t.id})">Editar</button>`:''}
       ${t.estado!=='Completada'?`<button class="btn" style="color:var(--green);border-color:rgba(77,255,160,0.3);" onclick="completarTarea(${t.id});closeTareaDetail()">✓ Completar</button>`:''}
+      <button class="btn" style="color:#a078ff;border-color:rgba(160,120,255,0.3);" onclick="añadirTareaASemana(${t.id})">📅 Añadir a semana</button>
       <button class="btn primary" onclick="closeTareaDetail()">Cerrar</button>
     </div>`;
   renderUpdates(t);
@@ -1947,6 +1948,32 @@ function showTareaTab(tab) {
 }
 
 function closeTareaDetail() { document.getElementById('tarea-detail-modal').classList.remove('open'); viewTareaId=null; }
+
+async function añadirTareaASemana(id) {
+  const t = tareas.find(x=>x.id===id); if(!t) return;
+  const lunes = getLunesDe(0);
+  const key = semanaKey(lunes);
+  // Mapear prioridad de tareas a semana
+  const prioMap = { 'Reparacion':'ALTA', 'Modificacion':'ALTA', 'Pedidos':'MEDIA', 'Organizacion':'BAJA', 'Ordenar':'BAJA' };
+  const prioridad = prioMap[t.prioridad] || 'MEDIA';
+  const orden = { ALTA:0, MEDIA:1, BAJA:2 };
+  const payload = {
+    semana_key: key,
+    prioridad,
+    prioridad_orden: orden[prioridad],
+    dia: 'SEMANA',
+    descripcion: t.descripcion,
+    responsable: t.propietario || 'General',
+    estado: 'Pendiente',
+    notas: t.notas||'',
+    tipo: 'tarea'
+  };
+  const { error } = await db.from('semana_tareas').insert(payload);
+  if (error) { showToast('Error al añadir a semana','err'); return; }
+  showToast('✓ Añadida a la semana actual','ok');
+  closeTareaDetail();
+  await loadSemanaTareas();
+}
 
 async function deleteTarea() {
   if (!confirm('¿Eliminar esta tarea?')) return;
