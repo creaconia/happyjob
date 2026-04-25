@@ -443,7 +443,7 @@
           <input type="text" class="search-input" id="search-text" placeholder="Buscar descripción, referencia, ubicación..." oninput="renderList()" />
           <select class="search-input" id="filter-est" onchange="renderList()" style="max-width:160px;">
             <option value="">Todas las estanterías</option>
-            <option>EST01</option><option>EST02</option><option>EST03</option><option>EST04</option><option>EST05</option><option>EST06</option><option>EST07</option><option>EST08</option><option>EST09</option>
+            <option>EST01</option><option>EST02</option><option>EST03</option><option>EST04</option><option>EST05</option><option>EST06</option><option>EST07</option><option>EST08</option><option>EST09</option><option>EST10</option><option>EST11</option><option>EST12</option><option>EST13</option><option>EST14</option><option>EST15</option><option>EST16</option><option>EST17</option><option>EST18</option><option>EST19</option><option>EST20</option>
           </select>
           <select class="search-input" id="filter-maq" onchange="renderList()" style="max-width:160px;">
             <option value="">Todas las máquinas</option>
@@ -753,10 +753,10 @@
     <div class="modal-header"><div class="modal-title" id="form-modal-title">Nuevo artículo</div><button class="modal-close" onclick="closeFormModal()">✕</button></div>
     <div class="modal-body">
       <div class="form-grid">
-        <div class="form-group"><label class="form-label">Estantería</label><select class="form-input" id="f-est"><option value="">— Seleccionar —</option><option>EST01</option><option>EST02</option><option>EST03</option><option>EST04</option><option>EST05</option><option>EST06</option><option>EST07</option><option>EST08</option><option>EST09</option></select></div>
-        <div class="form-group"><label class="form-label">Balda</label><select class="form-input" id="f-balda"><option value="">— Seleccionar —</option><option>B01</option><option>B02</option><option>B03</option><option>B04</option><option>B05</option></select></div>
-        <div class="form-group"><label class="form-label">Posición</label><select class="form-input" id="f-pos"><option value="">— Seleccionar —</option><option>P01</option><option>P02</option><option>P03</option><option>P04</option><option>P05</option><option>P06</option><option>P07</option><option>P08</option><option>P09</option></select></div>
-        <div class="form-group"><label class="form-label">Fondo</label><select class="form-input" id="f-fondo"><option value="">— Seleccionar —</option><option>F01</option><option>F02</option><option>F03</option><option>F04</option><option>F05</option><option>F06</option><option>F07</option><option>F08</option><option>F09</option></select></div>
+        <div class="form-group"><label class="form-label">Estantería</label><select class="form-input" id="f-est"><option value="">— Seleccionar —</option><option>EST01</option><option>EST02</option><option>EST03</option><option>EST04</option><option>EST05</option><option>EST06</option><option>EST07</option><option>EST08</option><option>EST09</option><option>EST10</option><option>EST11</option><option>EST12</option><option>EST13</option><option>EST14</option><option>EST15</option><option>EST16</option><option>EST17</option><option>EST18</option><option>EST19</option><option>EST20</option></select></div>
+        <div class="form-group"><label class="form-label">Balda</label><select class="form-input" id="f-balda"><option value="">— Seleccionar —</option><option>B01</option><option>B02</option><option>B03</option><option>B04</option><option>B05</option><option>B06</option><option>B07</option><option>B08</option><option>B09</option><option>B10</option><option>B11</option><option>B12</option><option>B13</option><option>B14</option><option>B15</option><option>B16</option><option>B17</option><option>B18</option><option>B19</option><option>B20</option></select></div>
+        <div class="form-group"><label class="form-label">Posición</label><select class="form-input" id="f-pos"><option value="">— Seleccionar —</option><option>P01</option><option>P02</option><option>P03</option><option>P04</option><option>P05</option><option>P06</option><option>P07</option><option>P08</option><option>P09</option><option>P10</option><option>P11</option><option>P12</option><option>P13</option><option>P14</option><option>P15</option><option>P16</option><option>P17</option><option>P18</option><option>P19</option><option>P20</option><option>P21</option><option>P22</option><option>P23</option><option>P24</option><option>P25</option><option>P26</option><option>P27</option><option>P28</option><option>P29</option></select></div>
+        <div class="form-group"><label class="form-label">Fondo</label><select class="form-input" id="f-fondo"><option value="">— Seleccionar —</option><option>F01</option><option>F02</option><option>F03</option><option>F04</option><option>F05</option><option>F06</option><option>F07</option><option>F08</option><option>F09</option><option>F10</option><option>F11</option><option>F12</option><option>F13</option><option>F14</option><option>F15</option><option>F16</option><option>F17</option><option>F18</option><option>F19</option><option>F20</option></select></div>
         <div class="form-group full"><label class="form-label">Descripción *</label><input type="text" class="form-input" id="f-desc" placeholder="Ej: Rodamiento SKF 6205-2Z" /></div>
         <div class="form-group"><label class="form-label">Referencia</label><input type="text" class="form-input" id="f-ref" placeholder="Ej: SKF-6205" /></div>
         <div class="form-group"><label class="form-label">ID Máquina</label><select class="form-input" id="f-maq"><option value="">— Seleccionar —</option><option>CHAMPS-1</option><option>CHAMPS-2</option><option>KSB200-1</option><option>KSB200-2</option><option>KSB200-3</option><option>KSV-2</option><option>LAZPIUR-1</option><option>LAZPIUR-2</option><option>LAZPIUR-3</option><option>LAZPIUR-4</option><option>REGG-1</option><option>REGG-2</option><option>REGG-3</option><option>GV3-1</option><option>GV3-2</option><option>SIMA-2</option><option>SIMA-3</option><option>SIMA-4</option><option>WA-10</option><option>ENV-1</option><option>ENV-2</option><option>ENV-3</option><option>T.DECARGA</option></select></div>
@@ -1597,6 +1597,15 @@ async function saveItem() {
   const pos  = document.getElementById('f-pos').value;
   const desc = document.getElementById('f-desc').value.trim();
   if (!est||!balda||!pos||!desc) { showToast('Rellena: Estantería, Balda, Posición y Descripción', 'err'); return; }
+
+  // Comprobar ubicación duplicada
+  const codigoNuevo = [est,balda,pos,document.getElementById('f-fondo').value].filter(Boolean).join('-');
+  const duplicado = items.find(x => x.codigo_ubicacion === codigoNuevo && x.id !== editId);
+  if (duplicado) {
+    const continuar = confirm(`⚠️ ATENCIÓN — Ubicación ya ocupada\n\n"${codigoNuevo}" ya tiene asignado:\n"${duplicado.descripcion}"\n\n¿Quieres guardar igualmente?`);
+    if (!continuar) return;
+  }
+
   const btn = document.getElementById('save-btn');
   btn.disabled=true; btn.textContent='Guardando...';
   let foto_url = editId ? (items.find(x=>x.id===editId)||{}).foto_url||'' : '';
