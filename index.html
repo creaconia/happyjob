@@ -2148,8 +2148,8 @@ function renderPedidos() {
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
           ${p.albaran_foto?'<span style="font-size:11px;color:var(--blue);font-family:var(--mono);">📷 albarán</span>':''}
-          ${p.email_enviado?'<span style="font-size:11px;color:var(--green);font-family:var(--mono);" title="Email enviado el '+( p.email_enviado_fecha ? new Date(p.email_enviado_fecha).toLocaleDateString(\'es-ES\') : \'—\')+\'">✉️ enviado</span>':''}
-          <button class="btn sm" style="color:var(--blue);border-color:rgba(77,166,255,0.3);" onclick="event.stopPropagation();openEmailPedidoModal(${p.id})" title="Enviar por email">📧</button>
+          ${p.email_enviado?'<span style="font-size:11px;color:var(--green);font-family:var(--mono);">&#x2709; enviado</span>':''}
+          <button class="btn sm" style="color:var(--blue);border-color:rgba(77,166,255,0.3);" onclick="event.stopPropagation();openEmailPedidoModal(${p.id})" title="Enviar por email">&#128231;</button>
           <span style="font-size:12px;font-family:var(--mono);color:${c.text};background:${c.bg};border:0.5px solid ${c.border};padding:4px 12px;border-radius:99px;white-space:nowrap;">${p.estado}</span>
           ${isAdmin?`<button class="btn sm" style="color:var(--green);border-color:rgba(77,255,160,0.3);" onclick="event.stopPropagation();cambiarEstadoPedido(${p.id},'Recibido')" ${p.estado==='Recibido'?'disabled':''}>✓ Recibido</button>`:''}
         </div>
