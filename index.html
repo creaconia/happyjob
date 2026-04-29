@@ -1142,6 +1142,7 @@
       </div>
       <div class="modal-actions">
         <button class="btn" onclick="closeEmailPedidoModal()">Cancelar</button>
+        <button class="btn" onclick="copiarPedidoPortapapeles()" style="color:var(--orange);border-color:rgba(249,115,22,0.3);">📋 Copiar texto</button>
         <button class="btn primary" onclick="abrirGmail()">📧 Abrir Gmail</button>
       </div>
     </div>
@@ -2215,6 +2216,31 @@ Enviado desde HappyJob — MSA Mantenimiento`);
 }
 
 function closeEmailPedidoModal() { document.getElementById('email-pedido-modal').classList.remove('open'); emailPedidoActual=null; emailsSeleccionados=new Set(); }
+
+function copiarPedidoPortapapeles() {
+  const p = emailPedidoActual; if(!p) return;
+  const texto = document.getElementById('email-preview').textContent;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(texto).then(() => {
+      showToast('📋 Texto copiado — pégalo en tu correo','ok');
+    }).catch(() => {
+      _copiarFallback(texto);
+    });
+  } else {
+    _copiarFallback(texto);
+  }
+}
+
+function _copiarFallback(texto) {
+  const ta = document.createElement('textarea');
+  ta.value = texto;
+  ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select(); ta.setSelectionRange(0,99999);
+  try { document.execCommand('copy'); showToast('📋 Texto copiado — pégalo en tu correo','ok'); }
+  catch(e) { showToast('No se pudo copiar','err'); }
+  document.body.removeChild(ta);
+}
 
 // ═══════════════════ PEDIDOS ═══════════════════
 const PEDIDO_ESTADO_COLORS = {
