@@ -345,6 +345,7 @@
       <div class="nav-item" id="nav-personal" onclick="showModule('personal')"><span class="nav-dot"></span> Personal</div>
       <div class="nav-item" id="nav-documentos" onclick="showModule('documentos')"><span class="nav-dot"></span> Documentos</div>
       <div class="nav-item" id="nav-informes" onclick="showModule('informes')"><span class="nav-dot"></span> Informes</div>
+      <div class="nav-item" id="nav-historial" onclick="showModule('historial')"><span class="nav-dot"></span> Historial</div>
       <div class="nav-item" id="nav-usuarios" onclick="showModule('usuarios')" style="display:none;color:var(--accent)"><span class="nav-dot" style="background:var(--accent)"></span> Usuarios</div>
     </nav>
     <!-- BARRA NAVEGACIÓN MÓVIL -->
@@ -376,6 +377,7 @@
         <div class="bottom-nav-more-item" id="bnm-personal" onclick="showModule('personal');closeMasMenu()">👷 Personal</div>
         <div class="bottom-nav-more-item" id="bnm-documentos" onclick="showModule('documentos');closeMasMenu()">📁 Documentos</div>
         <div class="bottom-nav-more-item" id="bnm-informes" onclick="showModule('informes');closeMasMenu()">📊 Informes</div>
+        <div class="bottom-nav-more-item" id="bnm-historial" onclick="showModule('historial');closeMasMenu()">📂 Historial</div>
         <div class="bottom-nav-more-item" id="bnm-usuarios" onclick="showModule('usuarios');closeMasMenu()" style="display:none;">👥 Usuarios</div>
       </div>
     </div>
@@ -803,6 +805,43 @@
         <div id="informes-content"><div class="empty"><div class="empty-icon">📊</div><div>Cargando datos...</div></div></div>
       </div>
 
+      <!-- ═══ HISTORIAL ═══ -->
+      <div id="mod-historial" style="display:none;">
+        <div class="page-header">
+          <div>
+            <div style="margin-bottom:8px;"><span onclick="showModule('dashboard')" style="font-size:12px;color:var(--text2);font-family:var(--mono);cursor:pointer;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text2)'">← Inicio</span></div>
+            <div class="page-title">Historial</div>
+            <div class="page-sub">Averías importantes y mantenimientos preventivos</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;" id="historial-header-btns">
+            <button class="btn primary" id="btn-add-historial" onclick="openHistorialModal()">+ Añadir</button>
+          </div>
+        </div>
+        <!-- Pestañas internas -->
+        <div style="display:flex;gap:4px;margin-bottom:20px;background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:4px;width:fit-content;">
+          <button id="htab-averias" onclick="switchHistorialTab('averias')" style="padding:7px 18px;border-radius:var(--radius);border:none;cursor:pointer;font-size:13px;font-family:var(--font);background:var(--accent);color:#fff;font-weight:500;">🔴 Averías</button>
+          <button id="htab-preventivos" onclick="switchHistorialTab('preventivos')" style="padding:7px 18px;border-radius:var(--radius);border:none;cursor:pointer;font-size:13px;font-family:var(--font);background:transparent;color:var(--text2);">🔩 Preventivos</button>
+        </div>
+        <!-- Stats -->
+        <div class="stats-row" id="historial-stats"></div>
+        <!-- Filtros -->
+        <div class="search-row">
+          <input type="text" class="search-input" id="h-search" placeholder="Buscar..." oninput="renderHistorial()" />
+          <select class="search-input" id="h-filter-maq" onchange="renderHistorial()" style="max-width:180px;">
+            <option value="">Todas las máquinas</option>
+            <option disabled style="color:#6b7280;font-size:11px;">── GENERAL ──</option>
+            <option>CHAMPS (general)</option><option>KSB-200 (general)</option><option>LAZPIUR (general)</option><option>REGG (general)</option><option>GV3 (general)</option><option>SIMA (general)</option><option>ENV (general)</option>
+            <option disabled style="color:#6b7280;font-size:11px;">── ESPECÍFICAS ──</option>
+            <option>CHAMPS-1</option><option>CHAMPS-2</option><option>KSB200-1</option><option>KSB200-2</option><option>KSB200-3</option><option>KSV-2</option><option>LAZPIUR-1</option><option>LAZPIUR-2</option><option>LAZPIUR-3</option><option>LAZPIUR-4</option><option>REGG-1</option><option>REGG-2</option><option>REGG-3</option><option>GV3-1</option><option>GV3-2</option><option>SIMA-2</option><option>SIMA-3</option><option>SIMA-4</option><option>WA-10</option><option>ENV-1</option><option>ENV-2</option><option>ENV-3</option><option>T.DECARGA</option>
+          </select>
+          <select class="search-input" id="h-filter-tipo" onchange="renderHistorial()" style="max-width:180px;">
+            <option value="">Todos los tipos</option>
+          </select>
+        </div>
+        <div class="result-info" id="h-result-info"></div>
+        <div id="historial-list"><div class="empty"><div class="empty-icon">📂</div><div>Cargando historial...</div></div></div>
+      </div>
+
     </main>
   </div>
 </div>
@@ -1008,6 +1047,114 @@
   <div class="modal" style="max-width:560px;">
     <div class="modal-header"><div class="modal-title" id="docd-title">Documento</div><button class="modal-close" onclick="closeDocDetail()">✕</button></div>
     <div class="modal-body" id="docd-body"></div>
+  </div>
+</div>
+
+<!-- MODAL AVERÍA -->
+<div class="modal-overlay" id="averia-modal">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-header"><div class="modal-title" id="averia-modal-title">Nueva avería</div><button class="modal-close" onclick="closeAveriaModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Máquina *</label>
+          <select class="form-input" id="av-maq">
+            <option value="">— Seleccionar —</option>
+            <option disabled style="color:#6b7280;font-size:11px;">── GENERAL ──</option>
+            <option>CHAMPS (general)</option><option>KSB-200 (general)</option><option>LAZPIUR (general)</option><option>REGG (general)</option><option>GV3 (general)</option><option>SIMA (general)</option><option>ENV (general)</option>
+            <option disabled style="color:#6b7280;font-size:11px;">── ESPECÍFICAS ──</option>
+            <option>CHAMPS-1</option><option>CHAMPS-2</option><option>KSB200-1</option><option>KSB200-2</option><option>KSB200-3</option><option>KSV-2</option><option>LAZPIUR-1</option><option>LAZPIUR-2</option><option>LAZPIUR-3</option><option>LAZPIUR-4</option><option>REGG-1</option><option>REGG-2</option><option>REGG-3</option><option>GV3-1</option><option>GV3-2</option><option>SIMA-2</option><option>SIMA-3</option><option>SIMA-4</option><option>WA-10</option><option>ENV-1</option><option>ENV-2</option><option>ENV-3</option><option>T.DECARGA</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Fecha *</label><input type="date" class="form-input" id="av-fecha" /></div>
+        <div class="form-group full"><label class="form-label">Tipo de avería *</label>
+          <select class="form-input" id="av-tipo" onchange="onAveriaTipoChange()">
+            <option value="">— Seleccionar —</option>
+            <option>Tarjetas quemadas / estropeadas</option>
+            <option>Motores de grietas</option>
+            <option>Cambio de cintas</option>
+          </select>
+        </div>
+        <!-- Campos extra motores de grietas -->
+        <div class="form-group" id="av-intensidad-group" style="display:none;"><label class="form-label">Consumo de intensidad (A)</label><input type="number" class="form-input" id="av-intensidad" placeholder="Ej: 4.2" step="0.1" min="0" /></div>
+        <div class="form-group" id="av-rodamientos-group" style="display:none;">
+          <label class="form-label">¿Se cambiaron los rodamientos?</label>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+            <input type="checkbox" id="av-rodamientos" style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer;" />
+            <label for="av-rodamientos" style="font-size:13px;color:var(--text2);cursor:pointer;">Sí, se cambiaron los rodamientos</label>
+          </div>
+        </div>
+        <div class="form-group full"><label class="form-label">Causa</label><textarea class="form-input" id="av-causa" placeholder="¿Por qué ocurrió?" style="min-height:60px;"></textarea></div>
+        <div class="form-group full"><label class="form-label">Solución aplicada</label><textarea class="form-input" id="av-solucion" placeholder="¿Qué se hizo para arreglarlo?" style="min-height:60px;"></textarea></div>
+        <div class="form-group"><label class="form-label">Responsable</label>
+          <select class="form-input" id="av-resp">
+            <option value="">— Seleccionar —</option>
+            <option>Raul</option><option>Georgi</option><option>Oscar</option><option>J.Ramon</option><option>Kamilla</option><option>Juanjo</option><option>Ana</option><option>Kike</option>
+          </select>
+        </div>
+        <!-- Foto -->
+        <div class="form-group full">
+          <label class="form-label">Fotos</label>
+          <div id="av-foto-preview" style="display:none;margin-bottom:8px;"><img id="av-foto-img" style="max-width:100%;max-height:180px;border-radius:var(--radius);border:0.5px solid var(--border);" /></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <label class="btn" style="cursor:pointer;">📷 Cámara<input type="file" id="av-foto-input" accept="image/*" capture="environment" style="display:none;" onchange="previewAveriaFoto(this)"></label>
+            <label class="btn" style="cursor:pointer;">🖼 Galería<input type="file" id="av-foto-gal" accept="image/*" style="display:none;" onchange="previewAveriaFoto(this)"></label>
+            <button class="btn danger" id="av-foto-del" style="display:none;" onclick="deleteAveriaFoto()">✕ Quitar</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions"><button class="btn" onclick="closeAveriaModal()">Cancelar</button><button class="btn primary" onclick="saveAveria()" id="averia-save-btn">Guardar avería</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE AVERÍA -->
+<div class="modal-overlay" id="averia-detail-modal">
+  <div class="modal" style="max-width:580px;">
+    <div class="modal-header"><div class="modal-title" id="avd-title">Avería</div><button class="modal-close" onclick="closeAveriaDetail()">✕</button></div>
+    <div class="modal-body" id="avd-body"></div>
+  </div>
+</div>
+
+<!-- MODAL PREVENTIVO -->
+<div class="modal-overlay" id="preventivo-modal">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-header"><div class="modal-title" id="prev-modal-title">Nuevo preventivo</div><button class="modal-close" onclick="closePreventivoModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Máquina *</label>
+          <select class="form-input" id="pv-maq">
+            <option value="">— Seleccionar —</option>
+            <option disabled style="color:#6b7280;font-size:11px;">── GENERAL ──</option>
+            <option>CHAMPS (general)</option><option>KSB-200 (general)</option><option>LAZPIUR (general)</option><option>REGG (general)</option><option>GV3 (general)</option><option>SIMA (general)</option><option>ENV (general)</option>
+            <option disabled style="color:#6b7280;font-size:11px;">── ESPECÍFICAS ──</option>
+            <option>CHAMPS-1</option><option>CHAMPS-2</option><option>KSB200-1</option><option>KSB200-2</option><option>KSB200-3</option><option>KSV-2</option><option>LAZPIUR-1</option><option>LAZPIUR-2</option><option>LAZPIUR-3</option><option>LAZPIUR-4</option><option>REGG-1</option><option>REGG-2</option><option>REGG-3</option><option>GV3-1</option><option>GV3-2</option><option>SIMA-2</option><option>SIMA-3</option><option>SIMA-4</option><option>WA-10</option><option>ENV-1</option><option>ENV-2</option><option>ENV-3</option><option>T.DECARGA</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Fecha *</label><input type="date" class="form-input" id="pv-fecha" /></div>
+        <div class="form-group"><label class="form-label">Tipo de preventivo *</label>
+          <select class="form-input" id="pv-tipo">
+            <option value="">— Seleccionar —</option>
+            <option>Bimestral</option><option>Trimestral</option><option>Semestral</option><option>Anual</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Responsable</label>
+          <select class="form-input" id="pv-resp">
+            <option value="">— Seleccionar —</option>
+            <option>Raul</option><option>Georgi</option><option>Oscar</option><option>J.Ramon</option><option>Kamilla</option><option>Juanjo</option><option>Ana</option><option>Kike</option>
+          </select>
+        </div>
+        <div class="form-group full"><label class="form-label">Observaciones</label><textarea class="form-input" id="pv-obs" placeholder="Qué se revisó, qué se encontró..." style="min-height:80px;"></textarea></div>
+      </div>
+      <div class="modal-actions"><button class="btn" onclick="closePreventivoModal()">Cancelar</button><button class="btn primary" onclick="savePreventivo()" id="prev-save-btn">Guardar preventivo</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE PREVENTIVO -->
+<div class="modal-overlay" id="prev-detail-modal">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header"><div class="modal-title" id="prevd-title">Preventivo</div><button class="modal-close" onclick="closePreventivoDetail()">✕</button></div>
+    <div class="modal-body" id="prevd-body"></div>
   </div>
 </div>
 
@@ -1737,13 +1884,13 @@ function exportExcel() {
 
 // ═══════════════════ MÓDULOS ═══════════════════
 function showModule(mod) {
-  ['dashboard','almacen','revisiones','tareas','pedidos','semana','usuarios','maquinas','personal','documentos','informes'].forEach(m => {
+  ['dashboard','almacen','revisiones','tareas','pedidos','semana','usuarios','maquinas','personal','documentos','informes','historial'].forEach(m => {
     const el = document.getElementById('mod-'+m); if(el) el.style.display = m===mod?'block':'none';
     const nav = document.getElementById('nav-'+m); if(nav) nav.classList.toggle('active', m===mod);
   });
   // Sync bottom nav
   const mainMods = ['dashboard','almacen','tareas','semana'];
-  const moreMods = ['revisiones','pedidos','maquinas','personal','documentos','informes','usuarios'];
+  const moreMods = ['revisiones','pedidos','maquinas','personal','documentos','informes','usuarios','historial'];
   mainMods.forEach(m => {
     const bn = document.getElementById('bn-'+m); if(bn) bn.classList.toggle('active', m===mod);
   });
@@ -1762,6 +1909,7 @@ function showModule(mod) {
   if (mod==='personal') loadPersonal();
   if (mod==='documentos') loadDocumentos();
   if (mod==='informes') loadInformes();
+  if (mod==='historial') loadHistorial();
 }
 
 function toggleMasMenu() {
@@ -3481,6 +3629,339 @@ function exportInformesPDF() {
   <div class="footer">HappyJob · Generado el ${new Date().toLocaleDateString('es-ES')}</div>
   </body></html>`);
   w.document.close(); setTimeout(()=>w.print(),500);
+}
+
+// ═══════════════════ HISTORIAL ═══════════════════
+let averias = [], editAveriaId = null, viewAveriaId = null;
+let preventivos = [], editPreventivoId = null, viewPreventivoId = null;
+let historialTab = 'averias';
+let averiaFotoData = null, averiaFotoExistente = null;
+
+const PREV_TIPO_CFG = {
+  'Bimestral':   { color:'var(--blue)',   bg:'rgba(88,166,255,0.12)',  border:'rgba(88,166,255,0.3)'  },
+  'Trimestral':  { color:'var(--green)',  bg:'rgba(63,185,80,0.12)',   border:'rgba(63,185,80,0.3)'   },
+  'Semestral':   { color:'var(--orange)', bg:'rgba(249,115,22,0.12)',  border:'rgba(249,115,22,0.3)'  },
+  'Anual':       { color:'#a078ff',       bg:'rgba(160,120,255,0.12)', border:'rgba(160,120,255,0.3)' },
+};
+
+function switchHistorialTab(tab) {
+  historialTab = tab;
+  const btnAv = document.getElementById('htab-averias');
+  const btnPv = document.getElementById('htab-preventivos');
+  if (tab === 'averias') {
+    btnAv.style.background = 'var(--accent)'; btnAv.style.color = '#fff';
+    btnPv.style.background = 'transparent'; btnPv.style.color = 'var(--text2)';
+    document.getElementById('h-filter-tipo').innerHTML = '<option value="">Todos los tipos</option><option>Tarjetas quemadas / estropeadas</option><option>Motores de grietas</option><option>Cambio de cintas</option>';
+  } else {
+    btnPv.style.background = 'var(--accent)'; btnPv.style.color = '#fff';
+    btnAv.style.background = 'transparent'; btnAv.style.color = 'var(--text2)';
+    document.getElementById('h-filter-tipo').innerHTML = '<option value="">Todos los tipos</option><option>Bimestral</option><option>Trimestral</option><option>Semestral</option><option>Anual</option>';
+  }
+  renderHistorial();
+}
+
+async function loadHistorial() {
+  const [rAv, rPv] = await Promise.all([
+    db.from('averias').select('*').order('fecha', { ascending: false }),
+    db.from('preventivos').select('*').order('fecha', { ascending: false })
+  ]);
+  averias = rAv.data || [];
+  preventivos = rPv.data || [];
+  switchHistorialTab(historialTab);
+}
+
+function updateHistorialStats() {
+  const cont = document.getElementById('historial-stats');
+  if (historialTab === 'averias') {
+    cont.innerHTML = `
+      <div class="stat-card"><div class="stat-label">total averías</div><div class="stat-value accent">${averias.length}</div></div>
+      <div class="stat-card"><div class="stat-label">tarjetas</div><div class="stat-value" style="color:var(--red)">${averias.filter(a=>a.tipo==='Tarjetas quemadas / estropeadas').length}</div></div>
+      <div class="stat-card"><div class="stat-label">motores grietas</div><div class="stat-value" style="color:var(--orange)">${averias.filter(a=>a.tipo==='Motores de grietas').length}</div></div>
+      <div class="stat-card"><div class="stat-label">cintas</div><div class="stat-value" style="color:var(--blue)">${averias.filter(a=>a.tipo==='Cambio de cintas').length}</div></div>`;
+  } else {
+    cont.innerHTML = `
+      <div class="stat-card"><div class="stat-label">total preventivos</div><div class="stat-value accent">${preventivos.length}</div></div>
+      <div class="stat-card"><div class="stat-label">bimestrales</div><div class="stat-value" style="color:var(--blue)">${preventivos.filter(p=>p.tipo==='Bimestral').length}</div></div>
+      <div class="stat-card"><div class="stat-label">trimestrales</div><div class="stat-value" style="color:var(--green)">${preventivos.filter(p=>p.tipo==='Trimestral').length}</div></div>
+      <div class="stat-card"><div class="stat-label">semestrales / anuales</div><div class="stat-value" style="color:var(--orange)">${preventivos.filter(p=>p.tipo==='Semestral'||p.tipo==='Anual').length}</div></div>`;
+  }
+}
+
+function renderHistorial() {
+  updateHistorialStats();
+  const q   = (document.getElementById('h-search').value||'').toLowerCase();
+  const maq = document.getElementById('h-filter-maq').value;
+  const tip = document.getElementById('h-filter-tipo').value;
+  const isAdmin = currentUser.email === ADMIN_EMAIL;
+  const list = document.getElementById('historial-list');
+
+  if (historialTab === 'averias') {
+    const f = averias.filter(a => {
+      const mQ = !q||(a.tipo||'').toLowerCase().includes(q)||(a.maquina||'').toLowerCase().includes(q)||(a.causa||'').toLowerCase().includes(q)||(a.solucion||'').toLowerCase().includes(q);
+      return mQ && (!maq||a.maquina===maq) && (!tip||a.tipo===tip);
+    });
+    document.getElementById('h-result-info').textContent = f.length + ' avería' + (f.length!==1?'s':'');
+    if (!f.length) { list.innerHTML='<div class="empty"><div class="empty-icon">🔴</div><div>No hay averías registradas</div></div>'; return; }
+    list.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;">'+f.map(a => {
+      const fecha = a.fecha ? new Date(a.fecha).toLocaleDateString('es-ES') : '—';
+      return `<div onclick="openAveriaDetail(${a.id})" style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='rgba(249,115,22,0.3)';this.style.background='var(--bg3)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)';this.style.background='var(--bg2)'">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+              <span style="font-size:11px;font-family:var(--mono);color:var(--accent);background:rgba(249,115,22,0.1);border:0.5px solid rgba(249,115,22,0.2);padding:3px 8px;border-radius:99px;">${a.maquina||'—'}</span>
+              <span style="font-size:11px;color:var(--text3);">${fecha}</span>
+              ${a.foto_url?'<span style="font-size:11px;color:var(--blue);">📷</span>':''}
+            </div>
+            <div style="font-size:13px;font-weight:500;margin-bottom:4px;">${a.tipo||'—'}</div>
+            ${a.tipo==='Motores de grietas'?`<div style="font-size:11px;color:var(--text2);">${a.intensidad?'Intensidad: '+a.intensidad+' A · ':''}${a.rodamientos?'✓ Rodamientos cambiados':''}</div>`:''}
+            ${a.causa?`<div style="font-size:12px;color:var(--text2);margin-top:4px;">Causa: ${a.causa}</div>`:''}
+          </div>
+          <div style="font-size:11px;color:var(--text3);">${a.responsable||''}</div>
+        </div>
+      </div>`;
+    }).join('')+'</div>';
+  } else {
+    const f = preventivos.filter(p => {
+      const mQ = !q||(p.tipo||'').toLowerCase().includes(q)||(p.maquina||'').toLowerCase().includes(q)||(p.observaciones||'').toLowerCase().includes(q);
+      return mQ && (!maq||p.maquina===maq) && (!tip||p.tipo===tip);
+    });
+    document.getElementById('h-result-info').textContent = f.length + ' preventivo' + (f.length!==1?'s':'');
+    if (!f.length) { list.innerHTML='<div class="empty"><div class="empty-icon">🔩</div><div>No hay preventivos registrados</div></div>'; return; }
+    list.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;">'+f.map(p => {
+      const c = PREV_TIPO_CFG[p.tipo]||PREV_TIPO_CFG['Trimestral'];
+      const fecha = p.fecha ? new Date(p.fecha).toLocaleDateString('es-ES') : '—';
+      return `<div onclick="openPreventivoDetail(${p.id})" style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='${c.border}';this.style.background='var(--bg3)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)';this.style.background='var(--bg2)'">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+              <span style="font-size:11px;font-family:var(--mono);color:var(--accent);background:rgba(249,115,22,0.1);border:0.5px solid rgba(249,115,22,0.2);padding:3px 8px;border-radius:99px;">${p.maquina||'—'}</span>
+              <span style="font-size:11px;color:var(--text3);">${fecha}</span>
+            </div>
+            ${p.observaciones?`<div style="font-size:12px;color:var(--text2);">${p.observaciones}</div>`:''}
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:12px;font-family:var(--mono);color:${c.color};background:${c.bg};border:0.5px solid ${c.border};padding:4px 12px;border-radius:99px;">${p.tipo}</span>
+            <span style="font-size:11px;color:var(--text3);">${p.responsable||''}</span>
+          </div>
+        </div>
+      </div>`;
+    }).join('')+'</div>';
+  }
+}
+
+// Botón + abre modal correcto según tab
+function openHistorialModal() {
+  if (historialTab === 'averias') openAveriaModal();
+  else openPreventivoModal();
+}
+
+// ── AVERÍAS ──
+function onAveriaTipoChange() {
+  const tipo = document.getElementById('av-tipo').value;
+  const show = tipo === 'Motores de grietas';
+  document.getElementById('av-intensidad-group').style.display = show ? '' : 'none';
+  document.getElementById('av-rodamientos-group').style.display = show ? '' : 'none';
+  if (!show) { document.getElementById('av-intensidad').value=''; document.getElementById('av-rodamientos').checked=false; }
+}
+
+function previewAveriaFoto(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    averiaFotoData = e.target.result;
+    document.getElementById('av-foto-img').src = averiaFotoData;
+    document.getElementById('av-foto-preview').style.display = 'block';
+    document.getElementById('av-foto-del').style.display = '';
+  };
+  reader.readAsDataURL(file);
+}
+
+function deleteAveriaFoto() {
+  averiaFotoData = null; averiaFotoExistente = null;
+  document.getElementById('av-foto-preview').style.display = 'none';
+  document.getElementById('av-foto-del').style.display = 'none';
+  document.getElementById('av-foto-input').value = '';
+  document.getElementById('av-foto-gal').value = '';
+}
+
+function openAveriaModal(id) {
+  editAveriaId = id||null;
+  averiaFotoData = null; averiaFotoExistente = null;
+  document.getElementById('av-foto-preview').style.display = 'none';
+  document.getElementById('av-foto-del').style.display = 'none';
+  document.getElementById('av-foto-input').value = '';
+  document.getElementById('av-foto-gal').value = '';
+  document.getElementById('av-intensidad-group').style.display = 'none';
+  document.getElementById('av-rodamientos-group').style.display = 'none';
+  if (id) {
+    const a = averias.find(x=>x.id===id); if(!a) return;
+    document.getElementById('av-maq').value = a.maquina||'';
+    document.getElementById('av-fecha').value = a.fecha||'';
+    document.getElementById('av-tipo').value = a.tipo||'';
+    document.getElementById('av-causa').value = a.causa||'';
+    document.getElementById('av-solucion').value = a.solucion||'';
+    document.getElementById('av-resp').value = a.responsable||'';
+    if (a.tipo === 'Motores de grietas') {
+      document.getElementById('av-intensidad-group').style.display = '';
+      document.getElementById('av-rodamientos-group').style.display = '';
+      document.getElementById('av-intensidad').value = a.intensidad||'';
+      document.getElementById('av-rodamientos').checked = a.rodamientos||false;
+    }
+    if (a.foto_url) {
+      averiaFotoExistente = a.foto_url;
+      document.getElementById('av-foto-img').src = a.foto_url;
+      document.getElementById('av-foto-preview').style.display = 'block';
+      document.getElementById('av-foto-del').style.display = '';
+    }
+    document.getElementById('averia-modal-title').textContent = 'Editar avería';
+  } else {
+    ['av-causa','av-solucion'].forEach(x=>document.getElementById(x).value='');
+    document.getElementById('av-maq').value = '';
+    document.getElementById('av-tipo').value = '';
+    document.getElementById('av-resp').value = '';
+    document.getElementById('av-intensidad').value = '';
+    document.getElementById('av-rodamientos').checked = false;
+    document.getElementById('av-fecha').value = new Date().toISOString().slice(0,10);
+    document.getElementById('averia-modal-title').textContent = 'Nueva avería';
+  }
+  document.getElementById('averia-modal').classList.add('open');
+}
+function closeAveriaModal() { document.getElementById('averia-modal').classList.remove('open'); editAveriaId=null; }
+
+async function saveAveria() {
+  const maq = document.getElementById('av-maq').value;
+  const tipo = document.getElementById('av-tipo').value;
+  const fecha = document.getElementById('av-fecha').value;
+  if (!maq||!tipo||!fecha) { showToast('Máquina, tipo y fecha son obligatorios','err'); return; }
+  const btn = document.getElementById('averia-save-btn'); btn.disabled=true; btn.textContent='Guardando...';
+  let foto_url = averiaFotoExistente||null;
+  if (averiaFotoData) {
+    try {
+      const blob = await (await fetch(averiaFotoData)).blob();
+      const fname = `averias/${Date.now()}.jpg`;
+      const { error: upErr } = await db.storage.from('fotos').upload(fname, blob, { contentType:'image/jpeg', upsert:true });
+      if (!upErr) { const { data: ud } = db.storage.from('fotos').getPublicUrl(fname); foto_url = ud.publicUrl; }
+    } catch(e) {}
+  }
+  const payload = {
+    maquina: maq, tipo, fecha,
+    causa: document.getElementById('av-causa').value.trim(),
+    solucion: document.getElementById('av-solucion').value.trim(),
+    responsable: document.getElementById('av-resp').value,
+    intensidad: tipo==='Motores de grietas' ? parseFloat(document.getElementById('av-intensidad').value)||null : null,
+    rodamientos: tipo==='Motores de grietas' ? document.getElementById('av-rodamientos').checked : false,
+    foto_url
+  };
+  let error;
+  if (editAveriaId) ({error}=await db.from('averias').update(payload).eq('id',editAveriaId));
+  else ({error}=await db.from('averias').insert(payload));
+  btn.disabled=false; btn.textContent='Guardar avería';
+  if (error) { showToast('Error: '+error.message,'err'); return; }
+  showToast(editAveriaId?'Avería actualizada':'Avería registrada ✓','ok');
+  closeAveriaModal(); await loadHistorial();
+}
+
+function openAveriaDetail(id) {
+  viewAveriaId = id;
+  const a = averias.find(x=>x.id===id); if(!a) return;
+  const isAdmin = currentUser.email===ADMIN_EMAIL;
+  const fecha = a.fecha ? new Date(a.fecha).toLocaleDateString('es-ES') : '—';
+  document.getElementById('avd-title').textContent = a.tipo||'Avería';
+  document.getElementById('avd-body').innerHTML = `
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+      <span style="font-size:12px;font-family:var(--mono);color:var(--accent);background:rgba(249,115,22,0.1);border:0.5px solid rgba(249,115,22,0.2);padding:5px 12px;border-radius:99px;">${a.maquina}</span>
+      <span style="font-size:12px;font-family:var(--mono);color:var(--text2);background:var(--bg3);border:0.5px solid var(--border);padding:5px 12px;border-radius:99px;">${fecha}</span>
+    </div>
+    ${a.foto_url?`<div style="margin-bottom:16px;"><img src="${a.foto_url}" style="max-width:100%;max-height:220px;border-radius:var(--radius);border:0.5px solid var(--border);cursor:pointer;" onclick="window.open('${a.foto_url}','_blank')" /></div>`:''}
+    <div class="detail-rows">
+      <div class="detail-row"><span class="dl">Tipo</span><span class="dv">${a.tipo||'—'}</span></div>
+      ${a.tipo==='Motores de grietas'?`<div class="detail-row"><span class="dl">Intensidad</span><span class="dv">${a.intensidad!=null?a.intensidad+' A':'—'}</span></div><div class="detail-row"><span class="dl">Rodamientos</span><span class="dv">${a.rodamientos?'✓ Cambiados':'No cambiados'}</span></div>`:''}
+      <div class="detail-row"><span class="dl">Causa</span><span class="dv">${a.causa||'—'}</span></div>
+      <div class="detail-row"><span class="dl">Solución</span><span class="dv">${a.solucion||'—'}</span></div>
+      <div class="detail-row"><span class="dl">Responsable</span><span class="dv">${a.responsable||'—'}</span></div>
+    </div>
+    <div class="modal-actions">
+      ${isAdmin?`<button class="btn danger" onclick="deleteAveria()">Eliminar</button>`:''}
+      ${isAdmin?`<button class="btn" onclick="closeAveriaDetail();openAveriaModal(${a.id})">Editar</button>`:''}
+      <button class="btn primary" onclick="closeAveriaDetail()">Cerrar</button>
+    </div>`;
+  document.getElementById('averia-detail-modal').classList.add('open');
+}
+function closeAveriaDetail() { document.getElementById('averia-detail-modal').classList.remove('open'); viewAveriaId=null; }
+async function deleteAveria() {
+  if (!confirm('¿Eliminar esta avería?')) return;
+  await db.from('averias').delete().eq('id',viewAveriaId);
+  showToast('Avería eliminada','ok'); closeAveriaDetail(); await loadHistorial();
+}
+
+// ── PREVENTIVOS ──
+function openPreventivoModal(id) {
+  editPreventivoId = id||null;
+  if (id) {
+    const p = preventivos.find(x=>x.id===id); if(!p) return;
+    document.getElementById('pv-maq').value = p.maquina||'';
+    document.getElementById('pv-fecha').value = p.fecha||'';
+    document.getElementById('pv-tipo').value = p.tipo||'';
+    document.getElementById('pv-resp').value = p.responsable||'';
+    document.getElementById('pv-obs').value = p.observaciones||'';
+    document.getElementById('prev-modal-title').textContent = 'Editar preventivo';
+  } else {
+    ['pv-obs'].forEach(x=>document.getElementById(x).value='');
+    document.getElementById('pv-maq').value = '';
+    document.getElementById('pv-tipo').value = '';
+    document.getElementById('pv-resp').value = '';
+    document.getElementById('pv-fecha').value = new Date().toISOString().slice(0,10);
+    document.getElementById('prev-modal-title').textContent = 'Nuevo preventivo';
+  }
+  document.getElementById('preventivo-modal').classList.add('open');
+}
+function closePreventivoModal() { document.getElementById('preventivo-modal').classList.remove('open'); editPreventivoId=null; }
+
+async function savePreventivo() {
+  const maq = document.getElementById('pv-maq').value;
+  const tipo = document.getElementById('pv-tipo').value;
+  const fecha = document.getElementById('pv-fecha').value;
+  if (!maq||!tipo||!fecha) { showToast('Máquina, tipo y fecha son obligatorios','err'); return; }
+  const btn = document.getElementById('prev-save-btn'); btn.disabled=true; btn.textContent='Guardando...';
+  const payload = { maquina:maq, tipo, fecha, responsable:document.getElementById('pv-resp').value, observaciones:document.getElementById('pv-obs').value.trim() };
+  let error;
+  if (editPreventivoId) ({error}=await db.from('preventivos').update(payload).eq('id',editPreventivoId));
+  else ({error}=await db.from('preventivos').insert(payload));
+  btn.disabled=false; btn.textContent='Guardar preventivo';
+  if (error) { showToast('Error: '+error.message,'err'); return; }
+  showToast(editPreventivoId?'Preventivo actualizado':'Preventivo registrado ✓','ok');
+  closePreventivoModal(); await loadHistorial();
+}
+
+function openPreventivoDetail(id) {
+  viewPreventivoId = id;
+  const p = preventivos.find(x=>x.id===id); if(!p) return;
+  const c = PREV_TIPO_CFG[p.tipo]||PREV_TIPO_CFG['Trimestral'];
+  const isAdmin = currentUser.email===ADMIN_EMAIL;
+  const fecha = p.fecha ? new Date(p.fecha).toLocaleDateString('es-ES') : '—';
+  document.getElementById('prevd-title').textContent = 'Preventivo — '+p.maquina;
+  document.getElementById('prevd-body').innerHTML = `
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+      <span style="font-size:12px;font-family:var(--mono);color:var(--accent);background:rgba(249,115,22,0.1);border:0.5px solid rgba(249,115,22,0.2);padding:5px 12px;border-radius:99px;">${p.maquina}</span>
+      <span style="font-size:12px;font-family:var(--mono);color:${c.color};background:${c.bg};border:0.5px solid ${c.border};padding:5px 12px;border-radius:99px;">${p.tipo}</span>
+    </div>
+    <div class="detail-rows">
+      <div class="detail-row"><span class="dl">Fecha</span><span class="dv">${fecha}</span></div>
+      <div class="detail-row"><span class="dl">Responsable</span><span class="dv">${p.responsable||'—'}</span></div>
+      <div class="detail-row"><span class="dl">Observaciones</span><span class="dv">${p.observaciones||'—'}</span></div>
+    </div>
+    <div class="modal-actions">
+      ${isAdmin?`<button class="btn danger" onclick="deletePreventivo()">Eliminar</button>`:''}
+      ${isAdmin?`<button class="btn" onclick="closePreventivoDetail();openPreventivoModal(${p.id})">Editar</button>`:''}
+      <button class="btn primary" onclick="closePreventivoDetail()">Cerrar</button>
+    </div>`;
+  document.getElementById('prev-detail-modal').classList.add('open');
+}
+function closePreventivoDetail() { document.getElementById('prev-detail-modal').classList.remove('open'); viewPreventivoId=null; }
+async function deletePreventivo() {
+  if (!confirm('¿Eliminar este preventivo?')) return;
+  await db.from('preventivos').delete().eq('id',viewPreventivoId);
+  showToast('Preventivo eliminado','ok'); closePreventivoDetail(); await loadHistorial();
 }
 
 // ═══════════════════ INICIO ═══════════════════
