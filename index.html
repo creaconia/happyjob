@@ -821,6 +821,7 @@
         <div style="display:flex;gap:4px;margin-bottom:20px;background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:4px;width:fit-content;">
           <button id="htab-averias" onclick="switchHistorialTab('averias')" style="padding:7px 18px;border-radius:var(--radius);border:none;cursor:pointer;font-size:13px;font-family:var(--font);background:var(--accent);color:#fff;font-weight:500;">🔴 Averías</button>
           <button id="htab-preventivos" onclick="switchHistorialTab('preventivos')" style="padding:7px 18px;border-radius:var(--radius);border:none;cursor:pointer;font-size:13px;font-family:var(--font);background:transparent;color:var(--text2);">🔩 Preventivos</button>
+          <button id="htab-cables" onclick="switchHistorialTab('cables')" style="padding:7px 18px;border-radius:var(--radius);border:none;cursor:pointer;font-size:13px;font-family:var(--font);background:transparent;color:var(--text2);">🔌 Cables sonda</button>
         </div>
         <!-- Stats -->
         <div class="stats-row" id="historial-stats"></div>
@@ -1070,7 +1071,8 @@
           <select class="form-input" id="av-tipo" onchange="onAveriaTipoChange()">
             <option value="">— Seleccionar —</option>
             <option>Tarjetas quemadas / estropeadas</option>
-            <option>Motores de grietas</option>
+            <option>Motor de grietas interior</option>
+            <option>Motor de grietas exterior</option>
             <option>Cambio de cintas</option>
           </select>
         </div>
@@ -1155,6 +1157,45 @@
   <div class="modal" style="max-width:520px;">
     <div class="modal-header"><div class="modal-title" id="prevd-title">Preventivo</div><button class="modal-close" onclick="closePreventivoDetail()">✕</button></div>
     <div class="modal-body" id="prevd-body"></div>
+  </div>
+</div>
+
+<!-- MODAL CABLE SONDA -->
+<div class="modal-overlay" id="cable-modal">
+  <div class="modal" style="max-width:540px;">
+    <div class="modal-header"><div class="modal-title" id="cable-modal-title">Nuevo cable sonda</div><button class="modal-close" onclick="closeCableModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Nº Cable *</label><input type="text" class="form-input" id="cb-num" placeholder="Ej: 01, 02..." /></div>
+        <div class="form-group"><label class="form-label">Estado</label>
+          <select class="form-input" id="cb-estado">
+            <option>En servicio</option>
+            <option>Enviado a reparar</option>
+            <option>Descartado</option>
+          </select>
+        </div>
+        <div class="form-group full"><label class="form-label">Máquina</label>
+          <select class="form-input" id="cb-maq">
+            <option value="">— Seleccionar —</option>
+            <option disabled style="color:#6b7280;font-size:11px;">── GENERAL ──</option>
+            <option>CHAMPS (general)</option><option>KSB-200 (general)</option><option>LAZPIUR (general)</option><option>REGG (general)</option><option>GV3 (general)</option><option>SIMA (general)</option><option>ENV (general)</option>
+            <option disabled style="color:#6b7280;font-size:11px;">── ESPECÍFICAS ──</option>
+            <option>CHAMPS-1</option><option>CHAMPS-2</option><option>KSB200-1</option><option>KSB200-2</option><option>KSB200-3</option><option>KSV-2</option><option>LAZPIUR-1</option><option>LAZPIUR-2</option><option>LAZPIUR-3</option><option>LAZPIUR-4</option><option>REGG-1</option><option>REGG-2</option><option>REGG-3</option><option>GV3-1</option><option>GV3-2</option><option>SIMA-2</option><option>SIMA-3</option><option>SIMA-4</option><option>WA-10</option><option>ENV-1</option><option>ENV-2</option><option>ENV-3</option><option>T.DECARGA</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Fecha último cambio</label><input type="date" class="form-input" id="cb-fecha" /></div>
+        <div class="form-group full"><label class="form-label">Observaciones</label><textarea class="form-input" id="cb-obs" placeholder="Notas sobre el cable..." style="min-height:70px;"></textarea></div>
+      </div>
+      <div class="modal-actions"><button class="btn" onclick="closeCableModal()">Cancelar</button><button class="btn primary" onclick="saveCable()" id="cable-save-btn">Guardar cable</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE CABLE SONDA -->
+<div class="modal-overlay" id="cable-detail-modal">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header"><div class="modal-title" id="cbd-title">Cable sonda</div><button class="modal-close" onclick="closeCableDetail()">✕</button></div>
+    <div class="modal-body" id="cbd-body"></div>
   </div>
 </div>
 
@@ -3634,6 +3675,7 @@ function exportInformesPDF() {
 // ═══════════════════ HISTORIAL ═══════════════════
 let averias = [], editAveriaId = null, viewAveriaId = null;
 let preventivos = [], editPreventivoId = null, viewPreventivoId = null;
+let cables = [], editCableId = null, viewCableId = null;
 let historialTab = 'averias';
 let averiaFotoData = null, averiaFotoExistente = null;
 
@@ -3644,29 +3686,35 @@ const PREV_TIPO_CFG = {
   'Anual':       { color:'#a078ff',       bg:'rgba(160,120,255,0.12)', border:'rgba(160,120,255,0.3)' },
 };
 
+const CABLE_ESTADO_CFG = {
+  'En servicio':       { color:'var(--green)',  bg:'rgba(63,185,80,0.12)',  border:'rgba(63,185,80,0.3)',  emoji:'🟢' },
+  'Enviado a reparar': { color:'var(--orange)', bg:'rgba(249,115,22,0.12)', border:'rgba(249,115,22,0.3)', emoji:'🟠' },
+  'Descartado':        { color:'var(--text3)',  bg:'var(--bg3)',            border:'var(--border)',        emoji:'⚫' },
+};
+
 function switchHistorialTab(tab) {
   historialTab = tab;
-  const btnAv = document.getElementById('htab-averias');
-  const btnPv = document.getElementById('htab-preventivos');
-  if (tab === 'averias') {
-    btnAv.style.background = 'var(--accent)'; btnAv.style.color = '#fff';
-    btnPv.style.background = 'transparent'; btnPv.style.color = 'var(--text2)';
-    document.getElementById('h-filter-tipo').innerHTML = '<option value="">Todos los tipos</option><option>Tarjetas quemadas / estropeadas</option><option>Motores de grietas</option><option>Cambio de cintas</option>';
-  } else {
-    btnPv.style.background = 'var(--accent)'; btnPv.style.color = '#fff';
-    btnAv.style.background = 'transparent'; btnAv.style.color = 'var(--text2)';
-    document.getElementById('h-filter-tipo').innerHTML = '<option value="">Todos los tipos</option><option>Bimestral</option><option>Trimestral</option><option>Semestral</option><option>Anual</option>';
-  }
+  ['averias','preventivos','cables'].forEach(t => {
+    const btn = document.getElementById('htab-'+t); if(!btn) return;
+    btn.style.background = t===tab ? 'var(--accent)' : 'transparent';
+    btn.style.color = t===tab ? '#fff' : 'var(--text2)';
+  });
+  const tipoSel = document.getElementById('h-filter-tipo');
+  if (tab==='averias') tipoSel.innerHTML = '<option value="">Todos los tipos</option><option>Tarjetas quemadas / estropeadas</option><option>Motor de grietas interior</option><option>Motor de grietas exterior</option><option>Cambio de cintas</option>';
+  else if (tab==='preventivos') tipoSel.innerHTML = '<option value="">Todos los tipos</option><option>Bimestral</option><option>Trimestral</option><option>Semestral</option><option>Anual</option>';
+  else tipoSel.innerHTML = '<option value="">Todos los estados</option><option>En servicio</option><option>Enviado a reparar</option><option>Descartado</option>';
   renderHistorial();
 }
 
 async function loadHistorial() {
-  const [rAv, rPv] = await Promise.all([
+  const [rAv, rPv, rCb] = await Promise.all([
     db.from('averias').select('*').order('fecha', { ascending: false }),
-    db.from('preventivos').select('*').order('fecha', { ascending: false })
+    db.from('preventivos').select('*').order('fecha', { ascending: false }),
+    db.from('cables_sonda').select('*').order('numero', { ascending: true })
   ]);
   averias = rAv.data || [];
   preventivos = rPv.data || [];
+  cables = rCb.data || [];
   switchHistorialTab(historialTab);
 }
 
@@ -3676,14 +3724,20 @@ function updateHistorialStats() {
     cont.innerHTML = `
       <div class="stat-card"><div class="stat-label">total averías</div><div class="stat-value accent">${averias.length}</div></div>
       <div class="stat-card"><div class="stat-label">tarjetas</div><div class="stat-value" style="color:var(--red)">${averias.filter(a=>a.tipo==='Tarjetas quemadas / estropeadas').length}</div></div>
-      <div class="stat-card"><div class="stat-label">motores grietas</div><div class="stat-value" style="color:var(--orange)">${averias.filter(a=>a.tipo==='Motores de grietas').length}</div></div>
+      <div class="stat-card"><div class="stat-label">motores grietas</div><div class="stat-value" style="color:var(--orange)">${averias.filter(a=>a.tipo==='Motor de grietas interior'||a.tipo==='Motor de grietas exterior').length}</div></div>
       <div class="stat-card"><div class="stat-label">cintas</div><div class="stat-value" style="color:var(--blue)">${averias.filter(a=>a.tipo==='Cambio de cintas').length}</div></div>`;
-  } else {
+  } else if (historialTab === 'preventivos') {
     cont.innerHTML = `
       <div class="stat-card"><div class="stat-label">total preventivos</div><div class="stat-value accent">${preventivos.length}</div></div>
       <div class="stat-card"><div class="stat-label">bimestrales</div><div class="stat-value" style="color:var(--blue)">${preventivos.filter(p=>p.tipo==='Bimestral').length}</div></div>
       <div class="stat-card"><div class="stat-label">trimestrales</div><div class="stat-value" style="color:var(--green)">${preventivos.filter(p=>p.tipo==='Trimestral').length}</div></div>
       <div class="stat-card"><div class="stat-label">semestrales / anuales</div><div class="stat-value" style="color:var(--orange)">${preventivos.filter(p=>p.tipo==='Semestral'||p.tipo==='Anual').length}</div></div>`;
+  } else {
+    cont.innerHTML = `
+      <div class="stat-card"><div class="stat-label">total cables</div><div class="stat-value accent">${cables.length}</div></div>
+      <div class="stat-card"><div class="stat-label">🟢 en servicio</div><div class="stat-value" style="color:var(--green)">${cables.filter(c=>c.estado==='En servicio').length}</div></div>
+      <div class="stat-card"><div class="stat-label">🟠 en reparación</div><div class="stat-value" style="color:var(--orange)">${cables.filter(c=>c.estado==='Enviado a reparar').length}</div></div>
+      <div class="stat-card"><div class="stat-label">⚫ descartados</div><div class="stat-value" style="color:var(--text3)">${cables.filter(c=>c.estado==='Descartado').length}</div></div>`;
   }
 }
 
@@ -3713,14 +3767,14 @@ function renderHistorial() {
               ${a.foto_url?'<span style="font-size:11px;color:var(--blue);">📷</span>':''}
             </div>
             <div style="font-size:13px;font-weight:500;margin-bottom:4px;">${a.tipo||'—'}</div>
-            ${a.tipo==='Motores de grietas'?`<div style="font-size:11px;color:var(--text2);">${a.intensidad?'Intensidad: '+a.intensidad+' A · ':''}${a.rodamientos?'✓ Rodamientos cambiados':''}</div>`:''}
+            ${(a.tipo==='Motor de grietas interior'||a.tipo==='Motor de grietas exterior')?`<div style="font-size:11px;color:var(--text2);">${a.intensidad?'Intensidad: '+a.intensidad+' A · ':''}${a.rodamientos?'✓ Rodamientos cambiados':''}</div>`:''}
             ${a.causa?`<div style="font-size:12px;color:var(--text2);margin-top:4px;">Causa: ${a.causa}</div>`:''}
           </div>
           <div style="font-size:11px;color:var(--text3);">${a.responsable||''}</div>
         </div>
       </div>`;
     }).join('')+'</div>';
-  } else {
+  } else if (historialTab === 'preventivos') {
     const f = preventivos.filter(p => {
       const mQ = !q||(p.tipo||'').toLowerCase().includes(q)||(p.maquina||'').toLowerCase().includes(q)||(p.observaciones||'').toLowerCase().includes(q);
       return mQ && (!maq||p.maquina===maq) && (!tip||p.tipo===tip);
@@ -3746,19 +3800,112 @@ function renderHistorial() {
         </div>
       </div>`;
     }).join('')+'</div>';
+  } else {
+    // CABLES SONDA
+    const q   = (document.getElementById('h-search').value||'').toLowerCase();
+    const maq = document.getElementById('h-filter-maq').value;
+    const est = document.getElementById('h-filter-tipo').value;
+    const f = cables.filter(c => {
+      const mQ = !q||(c.numero||'').toLowerCase().includes(q)||(c.maquina||'').toLowerCase().includes(q)||(c.observaciones||'').toLowerCase().includes(q);
+      return mQ && (!maq||c.maquina===maq) && (!est||c.estado===est);
+    });
+    document.getElementById('h-result-info').textContent = f.length + ' cable' + (f.length!==1?'s':'');
+    if (!f.length) { list.innerHTML='<div class="empty"><div class="empty-icon">🔌</div><div>No hay cables registrados</div></div>'; return; }
+    list.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;">'+f.map(c => {
+      const cfg = CABLE_ESTADO_CFG[c.estado]||CABLE_ESTADO_CFG['En servicio'];
+      const fecha = c.fecha_cambio ? new Date(c.fecha_cambio).toLocaleDateString('es-ES') : '—';
+      return `<div onclick="openCableDetail(${c.id})" style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;" onmouseover="this.style.borderColor='rgba(249,115,22,0.3)';this.style.background='var(--bg3)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)';this.style.background='var(--bg2)'">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:40px;height:40px;background:rgba(249,115,22,0.1);border:0.5px solid rgba(249,115,22,0.2);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:var(--accent);font-family:var(--mono);">${c.numero}</div>
+          <div>
+            <div style="font-size:13px;font-weight:500;">${c.maquina||'Sin máquina'}</div>
+            <div style="font-size:11px;color:var(--text3);">${c.fecha_cambio?'Último cambio: '+fecha:''} ${c.observaciones?'· '+c.observaciones:''}</div>
+          </div>
+        </div>
+        <span style="font-size:12px;font-family:var(--mono);color:${cfg.color};background:${cfg.bg};border:0.5px solid ${cfg.border};padding:4px 12px;border-radius:99px;white-space:nowrap;">${cfg.emoji} ${c.estado}</span>
+      </div>`;
+    }).join('')+'</div>';
   }
+}
+
+// ── CABLES SONDA ──
+function openCableModal(id) {
+  editCableId = id||null;
+  if (id) {
+    const c = cables.find(x=>x.id===id); if(!c) return;
+    document.getElementById('cb-num').value = c.numero||'';
+    document.getElementById('cb-estado').value = c.estado||'En servicio';
+    document.getElementById('cb-maq').value = c.maquina||'';
+    document.getElementById('cb-fecha').value = c.fecha_cambio||'';
+    document.getElementById('cb-obs').value = c.observaciones||'';
+    document.getElementById('cable-modal-title').textContent = 'Editar cable sonda';
+  } else {
+    ['cb-num','cb-obs'].forEach(x=>document.getElementById(x).value='');
+    document.getElementById('cb-estado').value = 'En servicio';
+    document.getElementById('cb-maq').value = '';
+    document.getElementById('cb-fecha').value = new Date().toISOString().slice(0,10);
+    document.getElementById('cable-modal-title').textContent = 'Nuevo cable sonda';
+  }
+  document.getElementById('cable-modal').classList.add('open');
+}
+function closeCableModal() { document.getElementById('cable-modal').classList.remove('open'); editCableId=null; }
+
+async function saveCable() {
+  const num = document.getElementById('cb-num').value.trim();
+  if (!num) { showToast('El número de cable es obligatorio','err'); return; }
+  const btn = document.getElementById('cable-save-btn'); btn.disabled=true; btn.textContent='Guardando...';
+  const payload = { numero:num, estado:document.getElementById('cb-estado').value, maquina:document.getElementById('cb-maq').value, fecha_cambio:document.getElementById('cb-fecha').value||null, observaciones:document.getElementById('cb-obs').value.trim() };
+  let error;
+  if (editCableId) ({error}=await db.from('cables_sonda').update(payload).eq('id',editCableId));
+  else ({error}=await db.from('cables_sonda').insert(payload));
+  btn.disabled=false; btn.textContent='Guardar cable';
+  if (error) { showToast('Error: '+error.message,'err'); return; }
+  showToast(editCableId?'Cable actualizado':'Cable registrado ✓','ok');
+  closeCableModal(); await loadHistorial();
+}
+
+function openCableDetail(id) {
+  viewCableId = id;
+  const c = cables.find(x=>x.id===id); if(!c) return;
+  const cfg = CABLE_ESTADO_CFG[c.estado]||CABLE_ESTADO_CFG['En servicio'];
+  const isAdmin = currentUser.email===ADMIN_EMAIL;
+  const fecha = c.fecha_cambio ? new Date(c.fecha_cambio).toLocaleDateString('es-ES') : '—';
+  document.getElementById('cbd-title').textContent = 'Cable sonda Nº '+c.numero;
+  document.getElementById('cbd-body').innerHTML = `
+    <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center;">
+      <div style="width:48px;height:48px;background:rgba(249,115,22,0.1);border:0.5px solid rgba(249,115,22,0.2);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:600;color:var(--accent);font-family:var(--mono);">${c.numero}</div>
+      <span style="font-size:12px;font-family:var(--mono);color:${cfg.color};background:${cfg.bg};border:0.5px solid ${cfg.border};padding:5px 12px;border-radius:99px;">${cfg.emoji} ${c.estado}</span>
+    </div>
+    <div class="detail-rows">
+      <div class="detail-row"><span class="dl">Máquina</span><span class="dv">${c.maquina||'—'}</span></div>
+      <div class="detail-row"><span class="dl">Último cambio</span><span class="dv">${fecha}</span></div>
+      <div class="detail-row"><span class="dl">Observaciones</span><span class="dv">${c.observaciones||'—'}</span></div>
+    </div>
+    <div class="modal-actions">
+      ${isAdmin?`<button class="btn danger" onclick="deleteCable()">Eliminar</button>`:''}
+      ${isAdmin?`<button class="btn" onclick="closeCableDetail();openCableModal(${c.id})">Editar</button>`:''}
+      <button class="btn primary" onclick="closeCableDetail()">Cerrar</button>
+    </div>`;
+  document.getElementById('cable-detail-modal').classList.add('open');
+}
+function closeCableDetail() { document.getElementById('cable-detail-modal').classList.remove('open'); viewCableId=null; }
+async function deleteCable() {
+  if (!confirm('¿Eliminar este cable?')) return;
+  await db.from('cables_sonda').delete().eq('id',viewCableId);
+  showToast('Cable eliminado','ok'); closeCableDetail(); await loadHistorial();
 }
 
 // Botón + abre modal correcto según tab
 function openHistorialModal() {
   if (historialTab === 'averias') openAveriaModal();
-  else openPreventivoModal();
+  else if (historialTab === 'preventivos') openPreventivoModal();
+  else openCableModal();
 }
 
 // ── AVERÍAS ──
 function onAveriaTipoChange() {
   const tipo = document.getElementById('av-tipo').value;
-  const show = tipo === 'Motores de grietas';
+  const show = tipo === 'Motor de grietas interior' || tipo === 'Motor de grietas exterior';
   document.getElementById('av-intensidad-group').style.display = show ? '' : 'none';
   document.getElementById('av-rodamientos-group').style.display = show ? '' : 'none';
   if (!show) { document.getElementById('av-intensidad').value=''; document.getElementById('av-rodamientos').checked=false; }
@@ -3801,7 +3948,7 @@ function openAveriaModal(id) {
     document.getElementById('av-causa').value = a.causa||'';
     document.getElementById('av-solucion').value = a.solucion||'';
     document.getElementById('av-resp').value = a.responsable||'';
-    if (a.tipo === 'Motores de grietas') {
+    if (a.tipo === 'Motor de grietas interior' || a.tipo === 'Motor de grietas exterior') {
       document.getElementById('av-intensidad-group').style.display = '';
       document.getElementById('av-rodamientos-group').style.display = '';
       document.getElementById('av-intensidad').value = a.intensidad||'';
@@ -3848,8 +3995,8 @@ async function saveAveria() {
     causa: document.getElementById('av-causa').value.trim(),
     solucion: document.getElementById('av-solucion').value.trim(),
     responsable: document.getElementById('av-resp').value,
-    intensidad: tipo==='Motores de grietas' ? parseFloat(document.getElementById('av-intensidad').value)||null : null,
-    rodamientos: tipo==='Motores de grietas' ? document.getElementById('av-rodamientos').checked : false,
+    intensidad: (tipo==='Motor de grietas interior'||tipo==='Motor de grietas exterior') ? parseFloat(document.getElementById('av-intensidad').value)||null : null,
+    rodamientos: (tipo==='Motor de grietas interior'||tipo==='Motor de grietas exterior') ? document.getElementById('av-rodamientos').checked : false,
     foto_url
   };
   let error;
@@ -3875,7 +4022,7 @@ function openAveriaDetail(id) {
     ${a.foto_url?`<div style="margin-bottom:16px;"><img src="${a.foto_url}" style="max-width:100%;max-height:220px;border-radius:var(--radius);border:0.5px solid var(--border);cursor:pointer;" onclick="window.open('${a.foto_url}','_blank')" /></div>`:''}
     <div class="detail-rows">
       <div class="detail-row"><span class="dl">Tipo</span><span class="dv">${a.tipo||'—'}</span></div>
-      ${a.tipo==='Motores de grietas'?`<div class="detail-row"><span class="dl">Intensidad</span><span class="dv">${a.intensidad!=null?a.intensidad+' A':'—'}</span></div><div class="detail-row"><span class="dl">Rodamientos</span><span class="dv">${a.rodamientos?'✓ Cambiados':'No cambiados'}</span></div>`:''}
+      ${(a.tipo==='Motor de grietas interior'||a.tipo==='Motor de grietas exterior')?`<div class="detail-row"><span class="dl">Intensidad</span><span class="dv">${a.intensidad!=null?a.intensidad+' A':'—'}</span></div><div class="detail-row"><span class="dl">Rodamientos</span><span class="dv">${a.rodamientos?'✓ Cambiados':'No cambiados'}</span></div>`:''}
       <div class="detail-row"><span class="dl">Causa</span><span class="dv">${a.causa||'—'}</span></div>
       <div class="detail-row"><span class="dl">Solución</span><span class="dv">${a.solucion||'—'}</span></div>
       <div class="detail-row"><span class="dl">Responsable</span><span class="dv">${a.responsable||'—'}</span></div>
