@@ -1067,17 +1067,89 @@
           </select>
         </div>
         <div class="form-group"><label class="form-label">Fecha *</label><input type="date" class="form-input" id="av-fecha" /></div>
+
+        <!-- NIVEL 1: Tipo de avería -->
         <div class="form-group full"><label class="form-label">Tipo de avería *</label>
           <select class="form-input" id="av-tipo" onchange="onAveriaTipoChange()">
             <option value="">— Seleccionar —</option>
             <option>Tarjetas quemadas / estropeadas</option>
-            <option>Motor de grietas interior</option>
-            <option>Motor de grietas exterior</option>
-            <option>Cambio de cintas</option>
+            <option>Motor de grietas</option>
+            <option>Cintas</option>
+            <option>Centrífugo</option>
           </select>
         </div>
-        <!-- Campos extra motores de grietas -->
-        <div class="form-group" id="av-intensidad-group" style="display:none;"><label class="form-label">Consumo de intensidad (A)</label><input type="number" class="form-input" id="av-intensidad" placeholder="Ej: 4.2" step="0.1" min="0" /></div>
+
+        <!-- NIVEL 2: Motor de grietas → subtipo -->
+        <div class="form-group full" id="av-motor-sub-group" style="display:none;">
+          <div style="padding-left:16px;border-left:2px solid rgba(249,115,22,0.3);">
+            <label class="form-label">└ Subtipo de motor</label>
+            <select class="form-input" id="av-motor-sub" onchange="onAveriaMotorSubChange()">
+              <option value="">— Seleccionar —</option>
+              <option>Motor de grietas interior</option>
+              <option>Motor de grietas exterior</option>
+              <option>Motor principal</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- NIVEL 3: Motor principal → reductor y encoder -->
+        <div class="form-group full" id="av-motor-principal-group" style="display:none;">
+          <div style="padding-left:32px;border-left:2px solid rgba(249,115,22,0.2);">
+            <label class="form-label">└ Componente afectado</label>
+            <select class="form-input" id="av-motor-componente">
+              <option value="">— Seleccionar —</option>
+              <option>Reductor</option>
+              <option>Encoder</option>
+              <option>Otro</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- NIVEL 2: Cintas → subtipo -->
+        <div class="form-group full" id="av-cinta-sub-group" style="display:none;">
+          <div style="padding-left:16px;border-left:2px solid rgba(249,115,22,0.3);">
+            <label class="form-label">└ Tipo de cinta</label>
+            <select class="form-input" id="av-cinta-sub">
+              <option value="">— Seleccionar —</option>
+              <option>Cinta de alimentación</option>
+              <option>Cinta de recuperación</option>
+              <option>Cinta de tornillos OK</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- NIVEL 2: Centrífugo → componente -->
+        <div class="form-group full" id="av-centrifugo-sub-group" style="display:none;">
+          <div style="padding-left:16px;border-left:2px solid rgba(249,115,22,0.3);">
+            <label class="form-label">└ Componente del centrífugo</label>
+            <select class="form-input" id="av-centrifugo-sub" onchange="onAveriaCentrifugoSubChange()">
+              <option value="">— Seleccionar —</option>
+              <option>Plato centrífugo</option>
+              <option>Anillo exterior</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- NIVEL 3: Centrífugo → parte -->
+        <div class="form-group full" id="av-centrifugo-parte-group" style="display:none;">
+          <div style="padding-left:32px;border-left:2px solid rgba(249,115,22,0.2);">
+            <label class="form-label">└ Parte afectada</label>
+            <select class="form-input" id="av-centrifugo-parte">
+              <option value="">— Seleccionar —</option>
+              <option>Rodamientos</option>
+              <option>Motor</option>
+              <option>Reductor</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Intensidad — todos los motores -->
+        <div class="form-group" id="av-intensidad-group" style="display:none;">
+          <label class="form-label">Consumo de intensidad (A)</label>
+          <input type="number" class="form-input" id="av-intensidad" placeholder="Ej: 4.2" step="0.1" min="0" />
+        </div>
+
+        <!-- Rodamientos — solo motor interior/exterior -->
         <div class="form-group" id="av-rodamientos-group" style="display:none;">
           <label class="form-label">¿Se cambiaron los rodamientos?</label>
           <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
@@ -1085,6 +1157,7 @@
             <label for="av-rodamientos" style="font-size:13px;color:var(--text2);cursor:pointer;">Sí, se cambiaron los rodamientos</label>
           </div>
         </div>
+
         <div class="form-group full"><label class="form-label">Causa</label><textarea class="form-input" id="av-causa" placeholder="¿Por qué ocurrió?" style="min-height:60px;"></textarea></div>
         <div class="form-group full"><label class="form-label">Solución aplicada</label><textarea class="form-input" id="av-solucion" placeholder="¿Qué se hizo para arreglarlo?" style="min-height:60px;"></textarea></div>
         <div class="form-group"><label class="form-label">Responsable</label>
@@ -1093,7 +1166,6 @@
             <option>Raul</option><option>Georgi</option><option>Oscar</option><option>J.Ramon</option><option>Kamilla</option><option>Juanjo</option><option>Ana</option><option>Kike</option>
           </select>
         </div>
-        <!-- Foto -->
         <div class="form-group full">
           <label class="form-label">Fotos</label>
           <div id="av-foto-preview" style="display:none;margin-bottom:8px;"><img id="av-foto-img" style="max-width:100%;max-height:180px;border-radius:var(--radius);border:0.5px solid var(--border);" /></div>
@@ -1145,7 +1217,17 @@
             <option>Raul</option><option>Georgi</option><option>Oscar</option><option>J.Ramon</option><option>Kamilla</option><option>Juanjo</option><option>Ana</option><option>Kike</option>
           </select>
         </div>
-        <div class="form-group full"><label class="form-label">Observaciones</label><textarea class="form-input" id="pv-obs" placeholder="Qué se revisó, qué se encontró..." style="min-height:80px;"></textarea></div>
+        <div class="form-group full"><label class="form-label">Observaciones generales</label><textarea class="form-input" id="pv-obs" placeholder="Qué se revisó, qué se encontró..." style="min-height:70px;"></textarea></div>
+        <!-- Incidencias detectadas -->
+        <div class="form-group full">
+          <label class="form-label">Incidencias detectadas</label>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">Problemas menores que aparecen pero no son avería — para hacerles seguimiento</div>
+          <div id="pv-incidencias-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
+          <div style="display:flex;gap:8px;">
+            <input type="text" class="form-input" id="pv-incidencia-input" placeholder="Ej: FC de seguridad no funciona..." style="flex:1;" onkeydown="if(event.key==='Enter'){event.preventDefault();addIncidencia();}" />
+            <button class="btn" onclick="addIncidencia()" type="button">+ Añadir</button>
+          </div>
+        </div>
       </div>
       <div class="modal-actions"><button class="btn" onclick="closePreventivoModal()">Cancelar</button><button class="btn primary" onclick="savePreventivo()" id="prev-save-btn">Guardar preventivo</button></div>
     </div>
@@ -1169,7 +1251,9 @@
         <div class="form-group"><label class="form-label">Nº Cable *</label><input type="text" class="form-input" id="cb-num" placeholder="Ej: 01, 02..." /></div>
         <div class="form-group"><label class="form-label">Estado</label>
           <select class="form-input" id="cb-estado">
+            <option>Almacenado</option>
             <option>En servicio</option>
+            <option>Estropeado</option>
             <option>Enviado a reparar</option>
             <option>Descartado</option>
           </select>
@@ -3687,9 +3771,11 @@ const PREV_TIPO_CFG = {
 };
 
 const CABLE_ESTADO_CFG = {
-  'En servicio':       { color:'var(--green)',  bg:'rgba(63,185,80,0.12)',  border:'rgba(63,185,80,0.3)',  emoji:'🟢' },
-  'Enviado a reparar': { color:'var(--orange)', bg:'rgba(249,115,22,0.12)', border:'rgba(249,115,22,0.3)', emoji:'🟠' },
-  'Descartado':        { color:'var(--text3)',  bg:'var(--bg3)',            border:'var(--border)',        emoji:'⚫' },
+  'Almacenado':        { color:'var(--blue)',   bg:'rgba(88,166,255,0.12)',  border:'rgba(88,166,255,0.3)',  emoji:'📦' },
+  'En servicio':       { color:'var(--green)',  bg:'rgba(63,185,80,0.12)',   border:'rgba(63,185,80,0.3)',   emoji:'🟢' },
+  'Estropeado':        { color:'var(--red)',    bg:'rgba(248,81,73,0.12)',   border:'rgba(248,81,73,0.3)',   emoji:'🔴' },
+  'Enviado a reparar': { color:'var(--orange)', bg:'rgba(249,115,22,0.12)',  border:'rgba(249,115,22,0.3)',  emoji:'🟠' },
+  'Descartado':        { color:'var(--text3)',  bg:'var(--bg3)',             border:'var(--border)',         emoji:'⚫' },
 };
 
 function switchHistorialTab(tab) {
@@ -3903,12 +3989,50 @@ function openHistorialModal() {
 }
 
 // ── AVERÍAS ──
+function _hideAllAveriaSubgroups() {
+  ['av-motor-sub-group','av-motor-principal-group','av-cinta-sub-group',
+   'av-centrifugo-sub-group','av-centrifugo-parte-group',
+   'av-intensidad-group','av-rodamientos-group'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.style.display='none';
+  });
+  ['av-motor-sub','av-motor-componente','av-cinta-sub','av-centrifugo-sub','av-centrifugo-parte'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('av-intensidad').value='';
+  document.getElementById('av-rodamientos').checked=false;
+}
+
 function onAveriaTipoChange() {
+  _hideAllAveriaSubgroups();
   const tipo = document.getElementById('av-tipo').value;
-  const show = tipo === 'Motor de grietas interior' || tipo === 'Motor de grietas exterior';
-  document.getElementById('av-intensidad-group').style.display = show ? '' : 'none';
-  document.getElementById('av-rodamientos-group').style.display = show ? '' : 'none';
-  if (!show) { document.getElementById('av-intensidad').value=''; document.getElementById('av-rodamientos').checked=false; }
+  if (tipo === 'Motor de grietas') {
+    document.getElementById('av-motor-sub-group').style.display='';
+  } else if (tipo === 'Cintas') {
+    document.getElementById('av-cinta-sub-group').style.display='';
+  } else if (tipo === 'Centrífugo') {
+    document.getElementById('av-centrifugo-sub-group').style.display='';
+  }
+}
+
+function onAveriaMotorSubChange() {
+  const sub = document.getElementById('av-motor-sub').value;
+  // Intensidad — todos los motores
+  const showIntensidad = sub !== '';
+  document.getElementById('av-intensidad-group').style.display = showIntensidad ? '' : 'none';
+  // Rodamientos — solo interior/exterior
+  const showRodamientos = sub === 'Motor de grietas interior' || sub === 'Motor de grietas exterior';
+  document.getElementById('av-rodamientos-group').style.display = showRodamientos ? '' : 'none';
+  // Motor principal → reductor/encoder
+  const showPrincipal = sub === 'Motor principal';
+  document.getElementById('av-motor-principal-group').style.display = showPrincipal ? '' : 'none';
+  if (!showPrincipal) document.getElementById('av-motor-componente').value='';
+  if (!showRodamientos) document.getElementById('av-rodamientos').checked=false;
+}
+
+function onAveriaCentrifugoSubChange() {
+  const sub = document.getElementById('av-centrifugo-sub').value;
+  document.getElementById('av-centrifugo-parte-group').style.display = sub ? '' : 'none';
+  if (!sub) document.getElementById('av-centrifugo-parte').value='';
 }
 
 function previewAveriaFoto(input) {
@@ -3938,8 +4062,7 @@ function openAveriaModal(id) {
   document.getElementById('av-foto-del').style.display = 'none';
   document.getElementById('av-foto-input').value = '';
   document.getElementById('av-foto-gal').value = '';
-  document.getElementById('av-intensidad-group').style.display = 'none';
-  document.getElementById('av-rodamientos-group').style.display = 'none';
+  _hideAllAveriaSubgroups();
   if (id) {
     const a = averias.find(x=>x.id===id); if(!a) return;
     document.getElementById('av-maq').value = a.maquina||'';
@@ -3948,11 +4071,29 @@ function openAveriaModal(id) {
     document.getElementById('av-causa').value = a.causa||'';
     document.getElementById('av-solucion').value = a.solucion||'';
     document.getElementById('av-resp').value = a.responsable||'';
-    if (a.tipo === 'Motor de grietas interior' || a.tipo === 'Motor de grietas exterior') {
-      document.getElementById('av-intensidad-group').style.display = '';
-      document.getElementById('av-rodamientos-group').style.display = '';
+    // Restaurar subtipos
+    if (a.tipo==='Motor de grietas') {
+      document.getElementById('av-motor-sub-group').style.display='';
+      document.getElementById('av-motor-sub').value = a.subtipo1||'';
+      document.getElementById('av-intensidad-group').style.display = a.subtipo1 ? '' : 'none';
+      const interExt = a.subtipo1==='Motor de grietas interior'||a.subtipo1==='Motor de grietas exterior';
+      document.getElementById('av-rodamientos-group').style.display = interExt ? '' : 'none';
+      if (a.subtipo1==='Motor principal') {
+        document.getElementById('av-motor-principal-group').style.display='';
+        document.getElementById('av-motor-componente').value = a.subtipo2||'';
+      }
       document.getElementById('av-intensidad').value = a.intensidad||'';
       document.getElementById('av-rodamientos').checked = a.rodamientos||false;
+    } else if (a.tipo==='Cintas') {
+      document.getElementById('av-cinta-sub-group').style.display='';
+      document.getElementById('av-cinta-sub').value = a.subtipo1||'';
+    } else if (a.tipo==='Centrífugo') {
+      document.getElementById('av-centrifugo-sub-group').style.display='';
+      document.getElementById('av-centrifugo-sub').value = a.subtipo1||'';
+      if (a.subtipo1) {
+        document.getElementById('av-centrifugo-parte-group').style.display='';
+        document.getElementById('av-centrifugo-parte').value = a.subtipo2||'';
+      }
     }
     if (a.foto_url) {
       averiaFotoExistente = a.foto_url;
@@ -3966,8 +4107,6 @@ function openAveriaModal(id) {
     document.getElementById('av-maq').value = '';
     document.getElementById('av-tipo').value = '';
     document.getElementById('av-resp').value = '';
-    document.getElementById('av-intensidad').value = '';
-    document.getElementById('av-rodamientos').checked = false;
     document.getElementById('av-fecha').value = new Date().toISOString().slice(0,10);
     document.getElementById('averia-modal-title').textContent = 'Nueva avería';
   }
@@ -3975,12 +4114,52 @@ function openAveriaModal(id) {
 }
 function closeAveriaModal() { document.getElementById('averia-modal').classList.remove('open'); editAveriaId=null; }
 
+// Incidencias en preventivos
+let prevIncidencias = [];
+
+function addIncidencia() {
+  const input = document.getElementById('pv-incidencia-input');
+  const texto = input.value.trim();
+  if (!texto) return;
+  prevIncidencias.push(texto);
+  input.value = '';
+  renderIncidencias();
+}
+
+function removeIncidencia(i) {
+  prevIncidencias.splice(i,1);
+  renderIncidencias();
+}
+
+function renderIncidencias() {
+  const list = document.getElementById('pv-incidencias-list');
+  if (!prevIncidencias.length) { list.innerHTML=''; return; }
+  list.innerHTML = prevIncidencias.map((inc,i) => `
+    <div style="display:flex;align-items:center;gap:8px;background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--radius);padding:8px 12px;">
+      <span style="font-size:13px;flex:1;color:var(--text2);">⚠️ ${inc}</span>
+      <button class="btn sm danger" onclick="removeIncidencia(${i})" type="button">✕</button>
+    </div>`).join('');
+}
+
 async function saveAveria() {
   const maq = document.getElementById('av-maq').value;
   const tipo = document.getElementById('av-tipo').value;
   const fecha = document.getElementById('av-fecha').value;
   if (!maq||!tipo||!fecha) { showToast('Máquina, tipo y fecha son obligatorios','err'); return; }
   const btn = document.getElementById('averia-save-btn'); btn.disabled=true; btn.textContent='Guardando...';
+
+  // Subtipos en cascada
+  let subtipo1='', subtipo2='';
+  if (tipo==='Motor de grietas') {
+    subtipo1 = document.getElementById('av-motor-sub').value;
+    if (subtipo1==='Motor principal') subtipo2 = document.getElementById('av-motor-componente').value;
+  } else if (tipo==='Cintas') {
+    subtipo1 = document.getElementById('av-cinta-sub').value;
+  } else if (tipo==='Centrífugo') {
+    subtipo1 = document.getElementById('av-centrifugo-sub').value;
+    subtipo2 = document.getElementById('av-centrifugo-parte').value;
+  }
+
   let foto_url = averiaFotoExistente||null;
   if (averiaFotoData) {
     try {
@@ -3990,13 +4169,16 @@ async function saveAveria() {
       if (!upErr) { const { data: ud } = db.storage.from('fotos').getPublicUrl(fname); foto_url = ud.publicUrl; }
     } catch(e) {}
   }
+
+  const esMotor = tipo==='Motor de grietas';
+  const motorInterExt = subtipo1==='Motor de grietas interior'||subtipo1==='Motor de grietas exterior';
   const payload = {
-    maquina: maq, tipo, fecha,
+    maquina: maq, tipo, subtipo1, subtipo2, fecha,
     causa: document.getElementById('av-causa').value.trim(),
     solucion: document.getElementById('av-solucion').value.trim(),
     responsable: document.getElementById('av-resp').value,
-    intensidad: (tipo==='Motor de grietas interior'||tipo==='Motor de grietas exterior') ? parseFloat(document.getElementById('av-intensidad').value)||null : null,
-    rodamientos: (tipo==='Motor de grietas interior'||tipo==='Motor de grietas exterior') ? document.getElementById('av-rodamientos').checked : false,
+    intensidad: esMotor ? parseFloat(document.getElementById('av-intensidad').value)||null : null,
+    rodamientos: motorInterExt ? document.getElementById('av-rodamientos').checked : false,
     foto_url
   };
   let error;
@@ -4021,8 +4203,9 @@ function openAveriaDetail(id) {
     </div>
     ${a.foto_url?`<div style="margin-bottom:16px;"><img src="${a.foto_url}" style="max-width:100%;max-height:220px;border-radius:var(--radius);border:0.5px solid var(--border);cursor:pointer;" onclick="window.open('${a.foto_url}','_blank')" /></div>`:''}
     <div class="detail-rows">
-      <div class="detail-row"><span class="dl">Tipo</span><span class="dv">${a.tipo||'—'}</span></div>
-      ${(a.tipo==='Motor de grietas interior'||a.tipo==='Motor de grietas exterior')?`<div class="detail-row"><span class="dl">Intensidad</span><span class="dv">${a.intensidad!=null?a.intensidad+' A':'—'}</span></div><div class="detail-row"><span class="dl">Rodamientos</span><span class="dv">${a.rodamientos?'✓ Cambiados':'No cambiados'}</span></div>`:''}
+      <div class="detail-row"><span class="dl">Tipo</span><span class="dv">${a.tipo||'—'}${a.subtipo1?' → '+a.subtipo1:''}${a.subtipo2?' → '+a.subtipo2:''}</span></div>
+      ${(a.tipo==='Motor de grietas'&&(a.subtipo1==='Motor de grietas interior'||a.subtipo1==='Motor de grietas exterior'))?`<div class="detail-row"><span class="dl">Intensidad</span><span class="dv">${a.intensidad!=null?a.intensidad+' A':'—'}</span></div><div class="detail-row"><span class="dl">Rodamientos</span><span class="dv">${a.rodamientos?'✓ Cambiados':'No cambiados'}</span></div>`:''}
+      ${(a.tipo==='Motor de grietas'&&a.subtipo1==='Motor principal')?`<div class="detail-row"><span class="dl">Intensidad</span><span class="dv">${a.intensidad!=null?a.intensidad+' A':'—'}</span></div>`:''}
       <div class="detail-row"><span class="dl">Causa</span><span class="dv">${a.causa||'—'}</span></div>
       <div class="detail-row"><span class="dl">Solución</span><span class="dv">${a.solucion||'—'}</span></div>
       <div class="detail-row"><span class="dl">Responsable</span><span class="dv">${a.responsable||'—'}</span></div>
@@ -4044,6 +4227,8 @@ async function deleteAveria() {
 // ── PREVENTIVOS ──
 function openPreventivoModal(id) {
   editPreventivoId = id||null;
+  prevIncidencias = [];
+  renderIncidencias();
   if (id) {
     const p = preventivos.find(x=>x.id===id); if(!p) return;
     document.getElementById('pv-maq').value = p.maquina||'';
@@ -4051,6 +4236,8 @@ function openPreventivoModal(id) {
     document.getElementById('pv-tipo').value = p.tipo||'';
     document.getElementById('pv-resp').value = p.responsable||'';
     document.getElementById('pv-obs').value = p.observaciones||'';
+    prevIncidencias = p.incidencias || [];
+    renderIncidencias();
     document.getElementById('prev-modal-title').textContent = 'Editar preventivo';
   } else {
     ['pv-obs'].forEach(x=>document.getElementById(x).value='');
@@ -4062,7 +4249,7 @@ function openPreventivoModal(id) {
   }
   document.getElementById('preventivo-modal').classList.add('open');
 }
-function closePreventivoModal() { document.getElementById('preventivo-modal').classList.remove('open'); editPreventivoId=null; }
+function closePreventivoModal() { document.getElementById('preventivo-modal').classList.remove('open'); editPreventivoId=null; prevIncidencias=[]; }
 
 async function savePreventivo() {
   const maq = document.getElementById('pv-maq').value;
@@ -4070,7 +4257,7 @@ async function savePreventivo() {
   const fecha = document.getElementById('pv-fecha').value;
   if (!maq||!tipo||!fecha) { showToast('Máquina, tipo y fecha son obligatorios','err'); return; }
   const btn = document.getElementById('prev-save-btn'); btn.disabled=true; btn.textContent='Guardando...';
-  const payload = { maquina:maq, tipo, fecha, responsable:document.getElementById('pv-resp').value, observaciones:document.getElementById('pv-obs').value.trim() };
+  const payload = { maquina:maq, tipo, fecha, responsable:document.getElementById('pv-resp').value, observaciones:document.getElementById('pv-obs').value.trim(), incidencias: prevIncidencias };
   let error;
   if (editPreventivoId) ({error}=await db.from('preventivos').update(payload).eq('id',editPreventivoId));
   else ({error}=await db.from('preventivos').insert(payload));
@@ -4097,6 +4284,7 @@ function openPreventivoDetail(id) {
       <div class="detail-row"><span class="dl">Responsable</span><span class="dv">${p.responsable||'—'}</span></div>
       <div class="detail-row"><span class="dl">Observaciones</span><span class="dv">${p.observaciones||'—'}</span></div>
     </div>
+    ${p.incidencias&&p.incidencias.length?`<div style="margin-top:16px;"><div style="font-size:11px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">⚠️ Incidencias detectadas</div><div style="display:flex;flex-direction:column;gap:6px;">${p.incidencias.map(inc=>`<div style="background:rgba(249,115,22,0.06);border:0.5px solid rgba(249,115,22,0.2);border-radius:var(--radius);padding:8px 12px;font-size:13px;color:var(--text2);">⚠️ ${inc}</div>`).join('')}</div></div>`:''}
     <div class="modal-actions">
       ${isAdmin?`<button class="btn danger" onclick="deletePreventivo()">Eliminar</button>`:''}
       ${isAdmin?`<button class="btn" onclick="closePreventivoDetail();openPreventivoModal(${p.id})">Editar</button>`:''}
