@@ -1100,6 +1100,7 @@
               <option value="">— Seleccionar —</option>
               <option>Reductor</option>
               <option>Encoder</option>
+              <option>Controlador</option>
               <option>Otro</option>
             </select>
           </div>
@@ -3792,7 +3793,7 @@ function switchHistorialTab(tab) {
     btn.style.color = t===tab ? '#fff' : 'var(--text2)';
   });
   const tipoSel = document.getElementById('h-filter-tipo');
-  if (tab==='averias') tipoSel.innerHTML = '<option value="">Todos los tipos</option><option>Tarjetas quemadas / estropeadas</option><option>Motor de grietas interior</option><option>Motor de grietas exterior</option><option>Cambio de cintas</option>';
+  if (tab==='averias') tipoSel.innerHTML = '<option value="">Todos los tipos</option><option>Tarjetas quemadas / estropeadas</option><option>Motor de grietas</option><option>Cintas</option><option>Centrífugo</option>';
   else if (tab==='preventivos') tipoSel.innerHTML = '<option value="">Todos los tipos</option><option>Bimestral</option><option>Trimestral</option><option>Semestral</option><option>Anual</option>';
   else tipoSel.innerHTML = '<option value="">Todos los estados</option><option>En servicio</option><option>Enviado a reparar</option><option>Descartado</option>';
   renderHistorial();
@@ -3816,8 +3817,9 @@ function updateHistorialStats() {
     cont.innerHTML = `
       <div class="stat-card"><div class="stat-label">total averías</div><div class="stat-value accent">${averias.length}</div></div>
       <div class="stat-card"><div class="stat-label">tarjetas</div><div class="stat-value" style="color:var(--red)">${averias.filter(a=>a.tipo==='Tarjetas quemadas / estropeadas').length}</div></div>
-      <div class="stat-card"><div class="stat-label">motores grietas</div><div class="stat-value" style="color:var(--orange)">${averias.filter(a=>a.tipo==='Motor de grietas interior'||a.tipo==='Motor de grietas exterior').length}</div></div>
-      <div class="stat-card"><div class="stat-label">cintas</div><div class="stat-value" style="color:var(--blue)">${averias.filter(a=>a.tipo==='Cambio de cintas').length}</div></div>`;
+      <div class="stat-card"><div class="stat-label">motores grietas</div><div class="stat-value" style="color:var(--orange)">${averias.filter(a=>a.tipo==='Motor de grietas').length}</div></div>
+      <div class="stat-card"><div class="stat-label">cintas</div><div class="stat-value" style="color:var(--blue)">${averias.filter(a=>a.tipo==='Cintas').length}</div></div>
+      <div class="stat-card"><div class="stat-label">centrífugo</div><div class="stat-value" style="color:#a078ff">${averias.filter(a=>a.tipo==='Centrífugo').length}</div></div>`;
   } else if (historialTab === 'preventivos') {
     cont.innerHTML = `
       <div class="stat-card"><div class="stat-label">total preventivos</div><div class="stat-value accent">${preventivos.length}</div></div>
