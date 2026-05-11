@@ -664,11 +664,11 @@
 
         <!-- Stats semana -->
         <div class="stats-row">
-          <div class="stat-card"><div class="stat-label">total tareas</div><div class="stat-value accent" id="st-total">—</div></div>
-          <div class="stat-card"><div class="stat-label">🔴 alta prioridad</div><div class="stat-value" id="st-alta" style="color:var(--red)">—</div></div>
-          <div class="stat-card"><div class="stat-label">✅ completadas</div><div class="stat-value" id="st-comp" style="color:var(--green)">—</div></div>
-          <div class="stat-card"><div class="stat-label">⏳ pendientes</div><div class="stat-value" id="st-pend" style="color:var(--orange)">—</div></div>
-          <div class="stat-card"><div class="stat-label">💡 propuestas</div><div class="stat-value" id="st-prop" style="color:#a078ff">—</div></div>
+          <div class="stat-card"><div class="stat-label">total tareas</div><div class="stat-value accent" id="sem-total">—</div></div>
+          <div class="stat-card"><div class="stat-label">🔴 alta prioridad</div><div class="stat-value" id="sem-alta" style="color:var(--red)">—</div></div>
+          <div class="stat-card"><div class="stat-label">✅ completadas</div><div class="stat-value" id="sem-comp" style="color:var(--green)">—</div></div>
+          <div class="stat-card"><div class="stat-label">⏳ pendientes</div><div class="stat-value" id="sem-pend" style="color:var(--orange)">—</div></div>
+          <div class="stat-card"><div class="stat-label">💡 propuestas</div><div class="stat-value" id="sem-prop" style="color:#a078ff">—</div></div>
         </div>
 
         <!-- Tareas de la semana -->
@@ -2308,10 +2308,16 @@ async function añadirTareaASemana(id) {
   const t = tareas.find(x=>x.id===id); if(!t) return;
   const lunes = getLunesDe(0);
   const key = semanaKey(lunes);
-  // Mapear prioridad de tareas a semana
   const prioMap = { 'Reparacion':'ALTA', 'Modificacion':'ALTA', 'Pedidos':'MEDIA', 'Organizacion':'BAJA', 'Ordenar':'BAJA' };
   const prioridad = prioMap[t.prioridad] || 'MEDIA';
   const orden = { ALTA:0, MEDIA:1, BAJA:2 };
+  // Última actualización si existe
+  const acts = t.actualizaciones || [];
+  const ultimaAct = acts.length ? acts[acts.length-1] : null;
+  const notasConAct = [
+    t.notas||'',
+    ultimaAct ? `Últ. actualización [${ultimaAct.fecha}]: ${ultimaAct.texto}` : ''
+  ].filter(Boolean).join('\n');
   const payload = {
     semana_key: key,
     prioridad,
@@ -2320,7 +2326,7 @@ async function añadirTareaASemana(id) {
     descripcion: t.descripcion,
     responsable: t.propietario || 'General',
     estado: 'Pendiente',
-    notas: t.notas||'',
+    notas: notasConAct,
     tipo: 'tarea'
   };
   const { error } = await db.from('semana_tareas').insert(payload);
@@ -3019,11 +3025,11 @@ function renderSemana() {
   const propuestas = semanaTareas.filter(t => t.semana_key === key && t.tipo === 'propuesta');
 
   // Stats
-  document.getElementById('st-total').textContent = tareas.length;
-  document.getElementById('st-alta').textContent = tareas.filter(t=>t.prioridad==='ALTA').length;
-  document.getElementById('st-comp').textContent = tareas.filter(t=>t.estado==='Completada').length;
-  document.getElementById('st-pend').textContent = tareas.filter(t=>t.estado==='Pendiente').length;
-  document.getElementById('st-prop').textContent = propuestas.length;
+  document.getElementById('sem-total').textContent = tareas.length;
+  document.getElementById('sem-alta').textContent = tareas.filter(t=>t.prioridad==='ALTA').length;
+  document.getElementById('sem-comp').textContent = tareas.filter(t=>t.estado==='Completada').length;
+  document.getElementById('sem-pend').textContent = tareas.filter(t=>t.estado==='Pendiente').length;
+  document.getElementById('sem-prop').textContent = propuestas.length;
 
   // Tareas — ordenadas prioridad + completadas al final
   const orden = { ALTA:0, MEDIA:1, BAJA:2 };
@@ -3254,11 +3260,11 @@ function exportSemanaPDF() {
 
   <h2>🚀 Tareas de la semana</h2>
   <table>
-    <thead><tr><th>Prioridad</th><th>Descripción</th><th>Día</th><th>Responsable</th><th>Estado</th></tr></thead>
+    <thead><tr><th>Prioridad</th><th>Descripción / Notas</th><th>Día</th><th>Responsable</th><th>Estado</th></tr></thead>
     <tbody>
       ${sorted.length ? sorted.map(t=>`<tr>
         <td class="${(t.prioridad||'').toLowerCase()}">${t.prioridad||'—'}</td>
-        <td>${t.descripcion||'—'}${t.notas?'<br><span style="font-size:10px;color:#777;font-style:italic;">'+t.notas+'</span>':''}</td>
+        <td>${t.descripcion||'—'}${t.notas?'<br><span style="font-size:10px;color:#555;font-style:italic;white-space:pre-line;">'+t.notas.replace(/</g,'&lt;')+'</span>':''}</td>
         <td>${t.dia==='SEMANA'?'Toda la semana':t.dia||'—'}</td>
         <td>${t.responsable||'General'}</td>
         <td>${t.estado||'—'}</td>
