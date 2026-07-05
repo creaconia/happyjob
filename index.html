@@ -1482,6 +1482,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 // ═══════════════════ CONFIG ═══════════════════
 const SUPABASE_URL  = 'https://hdlwfrmxfjekwmwfjoeq.supabase.co';
@@ -2010,14 +2011,18 @@ function previewPhoto(e) {
   r.readAsDataURL(file);
 }
 
+function downloadXlsx(data, filename) {
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Datos');
+  XLSX.writeFile(wb, filename);
+}
+
 function exportExcel() {
   if (!items.length) { showToast('No hay datos para exportar', 'err'); return; }
   const h = ['Código Ubicación','Descripción','Estantería','Balda','Posición','Fondo','ID Máquina','Referencia','Código Barras','Stock','Tipo Repuesto','Notas'];
   const rows = items.map(i=>[i.codigo_ubicacion||'',i.descripcion||'',i.estanteria||'',i.balda||'',i.posicion||'',i.fondo||'',i.id_maquina||'',i.referencia||'',i.codigo_barras||'',i.stock!=null?i.stock:'',i.tipo_repuesto||'',i.notas||'']);
-  const csv = [h,...rows].map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
-  a.download = 'happyjob_almacen_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
+  downloadXlsx([h,...rows], 'happyjob_almacen_'+new Date().toISOString().slice(0,10)+'.xlsx');
   showToast('Excel exportado', 'ok');
 }
 
@@ -2025,17 +2030,13 @@ function exportSAP() {
   if (!items.length) { showToast('No hay datos para exportar', 'err'); return; }
   const h = ['REFERENCIA','NOMBRE','SAP','CATEGORÍA','STOCK','ALMACÉN','PUNTO DE PEDIDO','CANTIDAD A PEDIR'];
   const rows = items.map(i => {
-    // Almacén = balda+posición+fondo sin guiones
-    const balda  = (i.balda||'').replace(/\D/g,'');
-    const pos    = (i.posicion||'').replace(/\D/g,'');
-    const fondo  = (i.fondo||'').replace(/\D/g,'');
+    const balda   = (i.balda||'').replace(/\D/g,'');
+    const pos     = (i.posicion||'').replace(/\D/g,'');
+    const fondo   = (i.fondo||'').replace(/\D/g,'');
     const almacen = [balda,pos,fondo].filter(Boolean).join('');
     return [i.referencia||'', i.descripcion||'', 640, 'SO', i.stock!=null?i.stock:'', almacen, '', ''];
   });
-  const csv = [h,...rows].map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
-  a.download = 'SAP_almacen_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
+  downloadXlsx([h,...rows], 'SAP_almacen_'+new Date().toISOString().slice(0,10)+'.xlsx');
   showToast('Exportación SAP generada ✓', 'ok');
 }
 
@@ -2383,10 +2384,7 @@ function exportTareas() {
     t.fecha_inicio||'', t.fecha_actualizacion||'', t.notas||'',
     (t.actualizaciones||[]).map(a=>`[${a.fecha}] ${a.texto}`).join(' | ')
   ]);
-  const csv = [h,...rows].map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
-  a.download = 'happyjob_tareas_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
+  downloadXlsx([h,...rows], 'happyjob_tareas_'+new Date().toISOString().slice(0,10)+'.xlsx');
   showToast('Excel exportado', 'ok');
 }
 
@@ -2767,10 +2765,7 @@ function exportPedidos() {
   if (!pedidos.length) { showToast('No hay pedidos para exportar', 'err'); return; }
   const h = ['Descripción','Referencia','Cantidad','Proveedor','Precio (€)','Máquina','Estado','Fecha Pedido','Nº Albarán','Notas'];
   const rows = pedidos.map(p=>[p.descripcion||'',p.referencia||'',p.cantidad||'',p.proveedor||'',p.precio!=null?p.precio:'',p.maquina||'',p.estado||'',p.fecha_pedido||'',p.albaran||'',p.notas||'']);
-  const csv = [h,...rows].map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
-  a.download = 'happyjob_pedidos_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
+  downloadXlsx([h,...rows], 'happyjob_pedidos_'+new Date().toISOString().slice(0,10)+'.xlsx');
   showToast('Excel exportado', 'ok');
 }
 
@@ -2977,10 +2972,7 @@ function exportRevisiones() {
     const dias = calcDias(r);
     return [r.maquina||'', r.tarea||'', r.periodicidad_dias||'', r.ultima_revision||'', calcProxima(r)||'', dias!==null?dias:'', calcEstado(r), r.notas||''];
   });
-  const csv = [h,...rows].map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
-  a.download = 'happyjob_revisiones_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
+  downloadXlsx([h,...rows], 'happyjob_revisiones_'+new Date().toISOString().slice(0,10)+'.xlsx');
   showToast('Excel exportado', 'ok');
 }
 
