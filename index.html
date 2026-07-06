@@ -865,7 +865,6 @@
           <label class="photo-upload" id="photo-upload-label"><input type="file" accept="image/*" id="f-photo" onchange="previewPhoto(event)" /><div style="font-size:13px;color:var(--text2);">Toca para añadir una foto</div><div style="font-size:11px;color:var(--text3);margin-top:4px;">JPG, PNG — desde cámara o galería</div></label>
           <img class="photo-preview" id="photo-preview" /></div>
         <div class="form-group"><label class="form-label">Stock (unidades)</label><input type="number" class="form-input" id="f-stock" placeholder="Ej: 5" min="0" /></div>
-        <div class="form-group"><label class="form-label">Nº SAP</label><input type="text" class="form-input" id="f-sap" value="640" placeholder="640" /></div>
         <div class="form-group"><label class="form-label">Tipo de repuesto</label>
           <select class="form-input" id="f-tipo-repuesto">
             <option value="">— Seleccionar —</option>
@@ -1483,6 +1482,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.3.0/dist/exceljs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 // ═══════════════════ CONFIG ═══════════════════
@@ -1942,7 +1942,6 @@ function startEdit() {
   document.getElementById('f-notas').value = i.notas||'';
   document.getElementById('f-barcode').value = i.codigo_barras||'';
   document.getElementById('f-stock').value = i.stock!=null ? i.stock : '';
-  document.getElementById('f-sap').value = i.sap || '640';
   document.getElementById('f-tipo-repuesto').value = i.tipo_repuesto||'';
   if (i.foto_url) { document.getElementById('photo-preview').src=i.foto_url; document.getElementById('photo-preview').style.display='block'; document.getElementById('photo-upload-label').style.display='none'; }
   document.getElementById('form-modal-title').textContent = 'Editar artículo';
@@ -1952,7 +1951,6 @@ function startEdit() {
 function openAddModal() {
   editId=null; photoData=null;
   ['f-est','f-balda','f-pos','f-fondo','f-desc','f-ref','f-maq','f-notas','f-barcode','f-stock'].forEach(id=>{ document.getElementById(id).value=''; });
-  document.getElementById('f-sap').value = '640';
   document.getElementById('f-tipo-repuesto').value = '';
   document.getElementById('photo-preview').style.display='none';
   document.getElementById('photo-upload-label').style.display='block';
@@ -1995,7 +1993,6 @@ async function saveItem() {
     notas: document.getElementById('f-notas').value.trim(),
     stock: document.getElementById('f-stock').value ? parseInt(document.getElementById('f-stock').value) : null,
     tipo_repuesto: document.getElementById('f-tipo-repuesto').value,
-    sap: document.getElementById('f-sap').value.trim() || '640',
     foto_url
   };
   let error;
@@ -2030,66 +2027,83 @@ function exportExcel() {
   showToast('Excel exportado', 'ok');
 }
 
-function exportSAP() {
+async function exportSAP() {
   if (!items.length) { showToast('No hay datos para exportar', 'err'); return; }
 
-  const wb = XLSX.utils.book_new();
-  const ws = {};
+  const workbook = new ExcelJS.Workbook();
+  const ws = workbook.addWorksheet('SAP Juanjo');
 
-  // Estilos
-  const azulMarino = { patternType:'solid', fgColor:{ rgb:'1F3864' } };
-  const azul       = { patternType:'solid', fgColor:{ rgb:'2E75B6' } };
-  const blanco     = { patternType:'solid', fgColor:{ rgb:'FFFFFF' } };
-  const fuenteBlancaNegrita = { bold:true, color:{ rgb:'FFFFFF' }, sz:11 };
-  const fuenteNormal = { sz:11 };
-  const alineacion = { horizontal:'center', vertical:'center' };
+  // Anchos de columna
+  ws.columns = [
+    { width: 20 }, // REFERENCIA
+    { width: 30 }, // NOMBRE
+    { width: 12 }, // SAP
+    { width: 14 }, // CATEGORÍA
+    { width: 10 }, // STOCK
+    { width: 12 }, // ALMACÉN
+    { width: 16 }, // PUNTO DE PEDIDO
+    { width: 18 }, // CANTIDAD A PEDIR
+  ];
 
-  // Fila 1: Título
-  ws['A1'] = { v:'REGISTRO DE PEDIDOS - MSA MANTENIMIENTO', t:'s',
-    s:{ fill:azulMarino, font:fuenteBlancaNegrita, alignment:{ horizontal:'left', vertical:'center' } } };
-  // Merge A1:H1
-  ws['!merges'] = [{ s:{r:0,c:0}, e:{r:0,c:7} }];
+  // Fila 1: Título fusionado
+  ws.mergeCells('A1:H1');
+  const titleRow = ws.getRow(1);
+  titleRow.height = 22;
+  const titleCell = ws.getCell('A1');
+  titleCell.value = 'REGISTRO DE PEDIDOS - MSA MANTENIMIENTO';
+  titleCell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FF1F3864' } };
+  titleCell.font = { bold:true, color:{ argb:'FFFFFFFF' }, size:12 };
+  titleCell.alignment = { vertical:'middle', horizontal:'left' };
 
   // Fila 2: Cabeceras
   const headers = ['REFERENCIA','NOMBRE','SAP','CATEGORÍA','STOCK','ALMACÉN','PUNTO DE PEDIDO','CANTIDAD A PEDIR'];
-  const cols = ['A','B','C','D','E','F','G','H'];
-  headers.forEach((h,i) => {
-    ws[cols[i]+'2'] = { v:h, t:'s', s:{ fill:azul, font:fuenteBlancaNegrita, alignment:alineacion } };
+  const headerRow = ws.addRow(headers);
+  headerRow.height = 18;
+  headerRow.eachCell(cell => {
+    cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FF2E75B6' } };
+    cell.font = { bold:true, color:{ argb:'FFFFFFFF' }, size:11 };
+    cell.alignment = { vertical:'middle', horizontal:'center' };
+    cell.border = {
+      top:    { style:'thin', color:{ argb:'FFBDD7EE' } },
+      bottom: { style:'thin', color:{ argb:'FFBDD7EE' } },
+      left:   { style:'thin', color:{ argb:'FFBDD7EE' } },
+      right:  { style:'thin', color:{ argb:'FFBDD7EE' } }
+    };
   });
 
-  // Datos desde fila 3
-  items.forEach((item, rowIdx) => {
+  // Filas de datos
+  items.forEach(item => {
     const balda   = (item.balda||'').replace(/\D/g,'');
     const pos     = (item.posicion||'').replace(/\D/g,'');
     const fondo   = (item.fondo||'').replace(/\D/g,'');
-    const almacen = [balda,pos,fondo].filter(Boolean).join('');
-    const row = [
+    const almacen = '640' + [balda,pos,fondo].filter(Boolean).join('');
+    const dataRow = ws.addRow([
       item.referencia||'',
       item.descripcion||'',
-      item.sap || 640,
+      640,
       'SO',
       item.stock!=null ? item.stock : '',
       almacen,
       '',
       ''
-    ];
-    row.forEach((val, colIdx) => {
-      const cellRef = cols[colIdx] + (rowIdx + 3);
-      ws[cellRef] = { v:val, t: typeof val === 'number' ? 'n' : 's',
-        s:{ fill:blanco, font:fuenteNormal } };
+    ]);
+    dataRow.eachCell(cell => {
+      cell.border = {
+        top:    { style:'thin', color:{ argb:'FFD9E1F2' } },
+        bottom: { style:'thin', color:{ argb:'FFD9E1F2' } },
+        left:   { style:'thin', color:{ argb:'FFD9E1F2' } },
+        right:  { style:'thin', color:{ argb:'FFD9E1F2' } }
+      };
     });
   });
 
-  // Anchos de columna
-  ws['!cols'] = [
-    {wch:20},{wch:30},{wch:12},{wch:14},{wch:10},{wch:12},{wch:16},{wch:18}
-  ];
-
-  // Rango total
-  ws['!ref'] = XLSX.utils.encode_range({ s:{r:0,c:0}, e:{r:items.length+1,c:7} });
-
-  XLSX.utils.book_append_sheet(wb, ws, 'SAP Juanjo');
-  XLSX.writeFile(wb, 'SAP_almacen_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  // Descargar
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'SAP_almacen_'+new Date().toISOString().slice(0,10)+'.xlsx';
+  a.click();
   showToast('Exportación SAP generada ✓', 'ok');
 }
 
