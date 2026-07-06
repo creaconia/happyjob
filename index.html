@@ -2147,11 +2147,11 @@ async function exportSAP() {
     const balda   = (item.balda||'').replace(/\D/g,'');
     const pos     = (item.posicion||'').replace(/\D/g,'');
     const fondo   = (item.fondo||'').replace(/\D/g,'');
-    const almacen = '640' + [balda,pos,fondo].filter(Boolean).join('');
+    const almacen = '64' + [balda,pos,fondo].filter(Boolean).join('');
     const dataRow = ws.addRow([
       item.referencia||'',
       item.descripcion||'',
-      640,
+      64,
       'SO',
       item.stock!=null ? item.stock : '',
       almacen,
